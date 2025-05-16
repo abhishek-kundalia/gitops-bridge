@@ -31,13 +31,25 @@ provider "kubernetes" {
 }
 
 locals {
-  name   = "getting-started"
+  name   = var.name
+  environment = var.environment
   region = var.region
 
   cluster_version = var.kubernetes_version
 
   vpc_cidr = var.vpc_cidr
-  azs      = slice(data.aws_availability_zones.available.names, 0, 3)
+  azs      = slice(data.aws_availability_zones.available.names, 0, var.availability_zones_count)
+
+  enable_ingress          = true
+  is_route53_private_zone = false
+  # change to a valid domain name you created a route53 zone
+  # aws route53 create-hosted-zone --name example.com --caller-reference "$(date)"
+  domain_name      = var.domain_name
+  argocd_subdomain = "argocd"
+  argocd_host      = "${local.argocd_subdomain}.${local.domain_name}"
+  route53_zone_arn = try(var.aws_route53_zone_arn, "")
+  argo_workflows_subdomain  = "argoworkflows"
+  argo_workflows_host       = "${local.argo_workflows_subdomain}.${local.domain_name}"
 
   gitops_addons_url      = "${var.gitops_addons_org}/${var.gitops_addons_repo}"
   gitops_addons_basepath = var.gitops_addons_basepath
@@ -115,6 +127,12 @@ locals {
       addons_repo_revision = local.gitops_addons_revision
     },
     {
+      argocd_hosts                = "[${local.argocd_host}]"
+      argo_workflows_hosts        = "[${local.argo_workflows_host}]"
+      external_dns_domain_filters = "[${local.domain_name}]"
+      external_dns_policy         = "sync"
+    },
+    {
       workload_repo_url      = local.gitops_workload_url
       workload_repo_basepath = local.gitops_workload_basepath
       workload_repo_path     = local.gitops_workload_path
@@ -124,7 +142,7 @@ locals {
 
   tags = {
     Blueprint  = local.name
-    GithubRepo = "github.com/gitops-bridge-dev/gitops-bridge"
+    GithubRepo = "github.com/abhishek-kundalia/gitops-bridge"
   }
 }
 
@@ -133,8 +151,11 @@ locals {
 ################################################################################
 module "gitops_bridge_bootstrap" {
   source = "gitops-bridge-dev/gitops-bridge/helm"
+  version = "0.1.0"
 
   cluster = {
+    cluster_name = module.eks.cluster_name
+    environment  = local.environment
     metadata = local.addons_metadata
     addons   = local.addons
   }
@@ -171,6 +192,8 @@ module "eks_blueprints_addons" {
   enable_karpenter                    = local.aws_addons.enable_karpenter
   enable_velero                       = local.aws_addons.enable_velero
   enable_aws_gateway_api_controller   = local.aws_addons.enable_aws_gateway_api_controller
+
+  external_dns_route53_zone_arns = [local.route53_zone_arn]
 
   tags = local.tags
 }
@@ -268,4 +291,42 @@ module "vpc" {
   }
 
   tags = local.tags
+}
+
+
+################################################################################
+# Route 53
+################################################################################
+# To get the hosted zone to be use in argocd domain
+data "aws_route53_zone" "domain_name" {
+  count        = local.enable_ingress ? 1 : 0
+  name         = local.domain_name
+  private_zone = local.domain_private_zone
+}
+
+
+################################################################################
+# ACM Certificate
+################################################################################
+
+resource "aws_acm_certificate" "cert" {
+  count             = local.enable_ingress ? 1 : 0
+  domain_name       = "*.${local.domain_name}"
+  validation_method = "DNS"
+}
+
+resource "aws_route53_record" "cert" {
+  count           = local.enable_ingress ? 1 : 0
+  zone_id         = data.aws_route53_zone.domain_name[0].zone_id
+  name            = tolist(aws_acm_certificate.cert[0].domain_validation_options)[0].resource_record_name
+  type            = tolist(aws_acm_certificate.cert[0].domain_validation_options)[0].resource_record_type
+  records         = [tolist(aws_acm_certificate.cert[0].domain_validation_options)[0].resource_record_value]
+  ttl             = 60
+  allow_overwrite = true
+}
+
+resource "aws_acm_certificate_validation" "cert" {
+  count                   = local.enable_ingress ? 1 : 0
+  certificate_arn         = aws_acm_certificate.cert[0].arn
+  validation_record_fqdns = [for record in aws_route53_record.cert : record.fqdn]
 }
