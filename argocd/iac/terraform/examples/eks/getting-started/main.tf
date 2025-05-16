@@ -51,11 +51,15 @@ locals {
   argo_workflows_subdomain  = "argoworkflows"
   argo_workflows_host       = "${local.argo_workflows_subdomain}.${local.domain_name}"
 
+  git_private_ssh_key = var.ssh_key_path
+
+  gitops_addons_org      = var.gitops_addons_org
   gitops_addons_url      = "${var.gitops_addons_org}/${var.gitops_addons_repo}"
   gitops_addons_basepath = var.gitops_addons_basepath
   gitops_addons_path     = var.gitops_addons_path
   gitops_addons_revision = var.gitops_addons_revision
 
+  gitops_workload_org      = var.gitops_workload_org
   gitops_workload_url      = "${var.gitops_workload_org}/${var.gitops_workload_repo}"
   gitops_workload_basepath = var.gitops_workload_basepath
   gitops_workload_path     = var.gitops_workload_path
@@ -140,6 +144,11 @@ locals {
     }
   )
 
+  argocd_apps = {
+    addons    = file("${path.module}/bootstrap/addons.yaml")
+    workloads = file("${path.module}/bootstrap/workloads.yaml")
+  }
+
   tags = {
     Blueprint  = local.name
     GithubRepo = "github.com/abhishek-kundalia/gitops-bridge"
@@ -159,6 +168,9 @@ module "gitops_bridge_bootstrap" {
     metadata = local.addons_metadata
     addons   = local.addons
   }
+  apps       = local.argocd_apps
+  argocd     = { create_namespace = false }
+  depends_on = [kubernetes_namespace.argocd, kubernetes_secret.git_secrets]
 }
 
 ################################################################################
@@ -166,7 +178,7 @@ module "gitops_bridge_bootstrap" {
 ################################################################################
 module "eks_blueprints_addons" {
   source  = "aws-ia/eks-blueprints-addons/aws"
-  version = "~> 1.0"
+  version = "~> 1.21.0"
 
   cluster_name      = module.eks.cluster_name
   cluster_endpoint  = module.eks.cluster_endpoint
@@ -195,7 +207,48 @@ module "eks_blueprints_addons" {
 
   external_dns_route53_zone_arns = [local.route53_zone_arn]
 
-  tags = local.tags
+  create_delay_dependencies = [for prof in module.eks.fargate_profiles : prof.fargate_profile_arn]
+
+  eks_addons = {
+    coredns = {
+      configuration_values = jsonencode({
+        computeType = "Fargate"
+        # Ensure that the we fully utilize the minimum amount of resources that are supplied by
+        # Fargate https://docs.aws.amazon.com/eks/latest/userguide/fargate-pod-configuration.html
+        # Fargate adds 256 MB to each pod's memory reservation for the required Kubernetes
+        # components (kubelet, kube-proxy, and containerd). Fargate rounds up to the following
+        # compute configuration that most closely matches the sum of vCPU and memory requests in
+        # order to ensure pods always have the resources that they need to run.
+        resources = {
+          limits = {
+            cpu = "0.25"
+            # We are targetting the smallest Task size of 512Mb, so we subtract 256Mb from the
+            # request/limit to ensure we can fit within that task
+            memory = "256M"
+          }
+          requests = {
+            cpu = "0.25"
+            # We are targetting the smallest Task size of 512Mb, so we subtract 256Mb from the
+            # request/limit to ensure we can fit within that task
+            memory = "256M"
+          }
+        }
+      })
+    }
+    kube-proxy = {}
+  }
+
+  karpenter_node = {
+    # Use static name so that it matches what is defined in `karpenter.yaml` example manifest
+    iam_role_use_name_prefix = false
+  }
+
+  tags = merge(local.tags, {
+    # NOTE - if creating multiple security groups with this module, only tag the
+    # security group that Karpenter should utilize with the following tag
+    # (i.e. - at most, only one security group should have this tag in your account)
+    "karpenter.sh/discovery" = local.name
+  })
 }
 
 ################################################################################
@@ -204,29 +257,75 @@ module "eks_blueprints_addons" {
 #tfsec:ignore:aws-eks-enable-control-plane-logging
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.13"
+  version = "~> 20.36.0"
 
   cluster_name                   = local.name
   cluster_version                = local.cluster_version
   cluster_endpoint_public_access = true
-
+  enable_cluster_creator_admin_permissions = true
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
-  eks_managed_node_groups = {
-    initial = {
-      instance_types = ["t3.medium"]
+    # Fargate profiles use the cluster primary security group so these are not utilized
+  create_cluster_security_group = false
+  create_node_security_group    = false
 
-      min_size     = 1
-      max_size     = 3
-      desired_size = 2
+  # eks_managed_node_groups = {
+  #   initial = {
+  #     ami_type       = "BOTTLEROCKET_ARM_64"
+  #     instance_types = ["m6g.medium"]
+
+  #     min_size     = 1
+  #     max_size     = 3
+  #     desired_size = 2
+  #   }
+  # }
+
+  # manage_aws_auth_configmap = true
+  # aws_auth_roles = [
+  #   # We need to add in the Karpenter node IAM role for nodes launched by Karpenter
+  #   {
+  #     rolearn  = module.eks_blueprints_addons.karpenter.node_iam_role_arn
+  #     username = "system:node:{{EC2PrivateDNSName}}"
+  #     groups = [
+  #       "system:bootstrappers",
+  #       "system:nodes",
+  #     ]
+  #   },
+  # ]
+
+   # Name needs to match role name passed to the EC2NodeClass
+  node_iam_role_use_name_prefix   = false
+  node_iam_role_name              = local.name
+  # create_pod_identity_association = true
+
+  # Used to attach additional IAM policies to the Karpenter node IAM role
+  node_iam_role_additional_policies = {
+    AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  }
+
+  fargate_profiles = {
+    karpenter = {
+      selectors = [
+        { namespace = "karpenter" }
+      ]
+    }
+    kube_system = {
+      name = "kube-system"
+      selectors = [
+        { namespace = "kube-system" }
+      ]
+    }
+    argocd = {
+      name = "argocd"
+      selectors = [
+        { namespace = "argocd" }
+      ]
     }
   }
   # EKS Addons
   cluster_addons = {
-    coredns    = {}
-    kube-proxy = {}
     vpc-cni = {
       # Specify the VPC CNI addon should be deployed before compute to ensure
       # the addon is configured before data plane compute resources are created
@@ -244,12 +343,18 @@ module "eks" {
     aws-ebs-csi-driver = {
       service_account_role_arn = module.ebs_csi_driver_irsa.iam_role_arn
     }
+    eks-pod-identity-agent = {}
   }
-  tags = local.tags
+  tags = merge(local.tags, {
+    # NOTE - if creating multiple security groups with this module, only tag the
+    # security group that Karpenter should utilize with the following tag
+    # (i.e. - at most, only one security group should have this tag in your account)
+    "karpenter.sh/discovery" = local.name
+  })
 }
 module "ebs_csi_driver_irsa" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "~> 5.20"
+  version = "~> 5.55.0"
 
   role_name_prefix = "${module.eks.cluster_name}-ebs-csi-"
 
@@ -288,9 +393,44 @@ module "vpc" {
 
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = 1
+    # Tags subnets for Karpenter auto-discovery
+    "karpenter.sh/discovery" = local.name
   }
 
   tags = local.tags
+}
+
+################################################################################
+# GitOps Bridge: Private ssh keys for git
+################################################################################
+resource "kubernetes_namespace" "argocd" {
+  depends_on = [module.eks_blueprints_addons]
+  metadata {
+    name = "argocd"
+  }
+}
+resource "kubernetes_secret" "git_secrets" {
+  depends_on = [kubernetes_namespace.argocd]
+  for_each = {
+    git-addons = {
+      type          = "git"
+      url           = local.gitops_addons_org
+      sshPrivateKey = file(pathexpand(local.git_private_ssh_key))
+    }
+    git-workloads = {
+      type          = "git"
+      url           = local.gitops_workload_org
+      sshPrivateKey = file(pathexpand(local.git_private_ssh_key))
+    }
+  }
+  metadata {
+    name      = each.key
+    namespace = kubernetes_namespace.argocd.metadata[0].name
+    labels = {
+      "argocd.argoproj.io/secret-type" = "repo-creds"
+    }
+  }
+  data = each.value
 }
 
 
@@ -301,7 +441,7 @@ module "vpc" {
 data "aws_route53_zone" "domain_name" {
   count        = local.enable_ingress ? 1 : 0
   name         = local.domain_name
-  private_zone = local.domain_private_zone
+  private_zone = local.is_route53_private_zone
 }
 
 

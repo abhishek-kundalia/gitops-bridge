@@ -22,6 +22,11 @@ variable "addons" {
     enable_karpenter                    = true
   }
 }
+variable "ssh_key_path" {
+  description = "SSH key path for git access"
+  type        = string
+  default     = "~/.ssh/id_rsa"
+}
 # Addons Git
 variable "gitops_addons_org" {
   description = "Git repository org/user contains for addons"

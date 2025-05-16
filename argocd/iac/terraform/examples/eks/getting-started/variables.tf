@@ -26,7 +26,7 @@ variable "aws_route53_zone_arn" {
 variable "vpc_cidr" {
   description = "VPC CIDR"
   type        = string
-  default     = "10.0.0.0/16"
+  default     = "10.1.0.0/16"
 }
 
 variable "availability_zones_count" {
@@ -82,6 +82,12 @@ variable "addons" {
     # enable_vpa                                   = true
     # enable_foo                                   = true 
   }
+}
+
+variable "ssh_key_path" {
+  description = "SSH key path for git access"
+  type        = string
+  default     = "~/.ssh/id_ed25519"
 }
 # Addons Git
 variable "gitops_addons_org" {
