@@ -63,6 +63,6 @@ spec:
         duration: "12h"
 
       # Weekend (Sat-Sun)
-      - nodes: "50%"
+      - nodes: "10%"
         schedule: "0 0 * * 0,6"
         duration: "24h"
