@@ -97,9 +97,9 @@ spec:
   # Subnet selection based on cluster tags
   subnetSelectorTerms:
     - tags:
-        karpenter.sh/discovery: karpenter
+        karpenter.sh/discovery: eks-gitops-bridge
 
   # Security group selection based on cluster tags
   securityGroupSelectorTerms:
     - tags:
-        karpenter.sh/discovery: karpenter
+        karpenter.sh/discovery: eks-gitops-bridge
