@@ -2,7 +2,7 @@
 apiVersion: karpenter.k8s.aws/v1
 kind: EC2NodeClass
 metadata:
-  name: default
+  name: bottlerocket
 spec:
   # Kubelet configuration for system resources and overhead
   kubelet:
@@ -103,3 +103,25 @@ spec:
   securityGroupSelectorTerms:
     - tags:
         karpenter.sh/discovery: "eks-gitops-bridge"
+
+# apiVersion: karpenter.k8s.aws/v1
+# kind: EC2NodeClass
+# metadata:
+#   name: default-1
+# spec:
+#   role: "karpenter-eks-gitops-bridge"
+#   amiSelectorTerms: 
+#   - alias: al2@latest
+#   securityGroupSelectorTerms:
+#   - tags:
+#       karpenter.sh/discovery: "eks-gitops-bridge"
+#   subnetSelectorTerms:
+#   - tags:
+#       karpenter.sh/discovery: "eks-gitops-bridge"
+#   tags:
+#     IntentLabel: apps
+#     KarpenterNodePoolName: default
+#     NodeType: default
+#     intent: apps
+#     karpenter.sh/discovery: "eks-gitops-bridge"
+#     project: karpenter-blueprints

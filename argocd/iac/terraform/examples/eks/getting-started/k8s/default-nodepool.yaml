@@ -2,7 +2,7 @@
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
-  name: default
+  name: bottlerocket
 spec:
   # Template defines the configuration for nodes that Karpenter will provision
   template:
@@ -38,7 +38,7 @@ spec:
       nodeClassRef:
         group: karpenter.k8s.aws
         kind: EC2NodeClass
-        name: default
+        name: bottlerocket
 
       # Node expiration configuration
       expireAfter: 168h # 7 * 24h = 168h
