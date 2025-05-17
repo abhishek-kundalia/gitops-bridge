@@ -34,7 +34,7 @@ spec:
     cpuCFSQuota: true
 
   # IAM role for the nodes
-  role: karpenter-karpenter
+  role: "karpenter-karpenter"
 
   # Bottlerocket AMI configuration with specific version
   amiSelectorTerms:
@@ -97,9 +97,9 @@ spec:
   # Subnet selection based on cluster tags
   subnetSelectorTerms:
     - tags:
-        karpenter.sh/discovery: eks-gitops-bridge
+        karpenter.sh/discovery: "eks-gitops-bridge"
 
   # Security group selection based on cluster tags
   securityGroupSelectorTerms:
     - tags:
-        karpenter.sh/discovery: eks-gitops-bridge
+        karpenter.sh/discovery: "eks-gitops-bridge"
