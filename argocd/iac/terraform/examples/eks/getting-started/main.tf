@@ -243,6 +243,9 @@ module "eks_blueprints_addons" {
     iam_role_use_name_prefix = false
   }
 
+  karpenter_enable_spot_termination          = true
+  karpenter_enable_instance_profile_creation = true
+
   tags = merge(local.tags, {
     # NOTE - if creating multiple security groups with this module, only tag the
     # security group that Karpenter should utilize with the following tag

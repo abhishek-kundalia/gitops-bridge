@@ -67,7 +67,7 @@ variable "addons" {
 
     # enable_aws_for_fluentbit                     = true
     # enable_aws_node_termination_handler          = true
-    # enable_karpenter                             = true
+    enable_karpenter                             = true
     # enable_velero                                = true
     # enable_aws_gateway_api_controller            = true
 
@@ -93,7 +93,7 @@ variable "ssh_key_path" {
 variable "gitops_addons_org" {
   description = "Git repository org/user contains for addons"
   type        = string
-  default     = "https://github.com/abhishek-kundalia"
+  default     = "git@github.com:abhishek-kundalia"
 }
 variable "gitops_addons_repo" {
   description = "Git repository contains for addons"
@@ -120,7 +120,7 @@ variable "gitops_addons_path" {
 variable "gitops_workload_org" {
   description = "Git repository org/user contains for workload"
   type        = string
-  default     = "https://github.com/abhishek-kundalia"
+  default     = "git@github.com:abhishek-kundalia"
 }
 variable "gitops_workload_repo" {
   description = "Git repository contains for workload"
