@@ -34,7 +34,7 @@ spec:
     cpuCFSQuota: true
 
   # IAM role for the nodes
-  role: "karpenter-karpenter"
+  role: "karpenter-eks-gitops-bridge"
 
   # Bottlerocket AMI configuration with specific version
   amiSelectorTerms:
