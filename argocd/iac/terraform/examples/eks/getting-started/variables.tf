@@ -1,3 +1,9 @@
+variable "enable_ingress" {
+  description = "Enable ingress"
+  type        = bool
+  default     = false
+}
+
 variable "name" {
   description = "Stack name"
   type        = string
@@ -48,6 +54,8 @@ variable "addons" {
   description = "Kubernetes addons"
   type        = any
   default = {
+
+    enable_argocd                                 = false
     enable_cert_manager                          = true
     # enable_aws_efs_csi_driver                    = true
     # enable_aws_fsx_csi_driver                    = true
