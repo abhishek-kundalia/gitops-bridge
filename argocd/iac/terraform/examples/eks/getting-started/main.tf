@@ -31,25 +31,25 @@ provider "kubernetes" {
 }
 
 locals {
-  name   = var.name
+  name        = var.name
   environment = var.environment
-  region = var.region
+  region      = var.region
 
   cluster_version = var.kubernetes_version
 
   vpc_cidr = var.vpc_cidr
   azs      = slice(data.aws_availability_zones.available.names, 0, var.availability_zones_count)
 
-  enable_ingress          = true
-  is_route53_private_zone = false
+  enable_ingress          = var.enable_ingress
+  is_route53_private_zone = var.is_route53_private_zone
   # change to a valid domain name you created a route53 zone
   # aws route53 create-hosted-zone --name example.com --caller-reference "$(date)"
-  domain_name      = var.domain_name
-  argocd_subdomain = "argocd"
-  argocd_host      = "${local.argocd_subdomain}.${local.domain_name}"
-  route53_zone_arn = try(var.aws_route53_zone_arn, "")
-  argo_workflows_subdomain  = "argoworkflows"
-  argo_workflows_host       = "${local.argo_workflows_subdomain}.${local.domain_name}"
+  domain_name              = var.domain_name
+  argocd_subdomain         = var.argocd_subdomain
+  argocd_host              = "${local.argocd_subdomain}.${local.domain_name}"
+  route53_zone_arn         = try(var.aws_route53_zone_arn, "")
+  argo_workflows_subdomain = var.argo_workflows_subdomain
+  argo_workflows_host      = "${local.argo_workflows_subdomain}.${local.domain_name}"
 
   git_private_ssh_key = var.ssh_key_path
 
@@ -161,25 +161,25 @@ locals {
 # GitOps Bridge: Bootstrap
 ################################################################################
 module "gitops_bridge_bootstrap" {
-  source = "gitops-bridge-dev/gitops-bridge/helm"
+  source  = "gitops-bridge-dev/gitops-bridge/helm"
   version = "0.1.0"
 
   cluster = {
     cluster_name = module.eks.cluster_name
     environment  = local.environment
-    metadata = local.addons_metadata
-    addons   = local.addons
+    metadata     = local.addons_metadata
+    addons       = local.addons
   }
-  apps       = local.argocd_apps
-  argocd     = { 
-    create_namespace = false 
-    name          = "argo-cd"
-    chart_version = "8.0.4"
-    repository    = "https://argoproj.github.io/argo-helm"
-    namespace     = "argocd"
-    force_update  = true
-    values        = [templatefile("${path.module}/argocd/values.yaml", {})]}
-    depends_on = [kubernetes_namespace.argocd, kubernetes_secret.git_secrets]
+  apps = local.argocd_apps
+  argocd = {
+    create_namespace = false
+    name             = "argo-cd"
+    chart_version    = var.argocd_chart_version
+    repository       = var.argocd_repository
+    namespace        = var.argocd_namespace
+    force_update     = var.argocd_force_update
+  values = [templatefile("${path.module}/argocd/values.yaml", {})] }
+  depends_on = [kubernetes_namespace.argocd, kubernetes_secret.git_secrets]
 }
 
 ################################################################################
@@ -271,15 +271,15 @@ module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.36.0"
 
-  cluster_name                   = local.name
-  cluster_version                = local.cluster_version
-  cluster_endpoint_public_access = true
-  enable_cluster_creator_admin_permissions = true
+  cluster_name                             = local.name
+  cluster_version                          = local.cluster_version
+  cluster_endpoint_public_access           = var.cluster_endpoint_public_access
+  enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
-    # Fargate profiles use the cluster primary security group so these are not utilized
+  # Fargate profiles use the cluster primary security group so these are not utilized
   create_cluster_security_group = false
   create_node_security_group    = false
 
@@ -307,9 +307,9 @@ module "eks" {
   #   },
   # ]
 
-   # Name needs to match role name passed to the EC2NodeClass
-  node_iam_role_use_name_prefix   = false
-  node_iam_role_name              = local.name
+  # Name needs to match role name passed to the EC2NodeClass
+  node_iam_role_use_name_prefix = false
+  node_iam_role_name            = local.name
   # create_pod_identity_association = true
 
   # Used to attach additional IAM policies to the Karpenter node IAM role
@@ -396,8 +396,8 @@ module "vpc" {
   private_subnets = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 4, k)]
   public_subnets  = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k + 48)]
 
-  enable_nat_gateway = true
-  single_nat_gateway = true
+  enable_nat_gateway = var.enable_nat_gateway
+  single_nat_gateway = var.single_nat_gateway
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
@@ -464,7 +464,7 @@ data "aws_route53_zone" "domain_name" {
 resource "aws_acm_certificate" "cert" {
   count             = local.enable_ingress ? 1 : 0
   domain_name       = "*.${local.domain_name}"
-  validation_method = "DNS"
+  validation_method = var.acm_validation_method
 }
 
 resource "aws_route53_record" "cert" {
@@ -473,8 +473,8 @@ resource "aws_route53_record" "cert" {
   name            = tolist(aws_acm_certificate.cert[0].domain_validation_options)[0].resource_record_name
   type            = tolist(aws_acm_certificate.cert[0].domain_validation_options)[0].resource_record_type
   records         = [tolist(aws_acm_certificate.cert[0].domain_validation_options)[0].resource_record_value]
-  ttl             = 60
-  allow_overwrite = true
+  ttl             = var.route53_record_ttl
+  allow_overwrite = var.route53_allow_overwrite
 }
 
 resource "aws_acm_certificate_validation" "cert" {
