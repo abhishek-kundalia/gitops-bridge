@@ -132,8 +132,8 @@ locals {
       addons_repo_revision = local.gitops_addons_revision
     },
     {
-      argocd_hosts                = "[${local.argocd_host}]"
-      argo_workflows_hosts        = "[${local.argo_workflows_host}]"
+      argocd_hosts                = "${local.argocd_host}"
+      argo_workflows_hosts        = "${local.argo_workflows_host}"
       external_dns_domain_filters = "[${local.domain_name}]"
       external_dns_policy         = "sync"
     },
