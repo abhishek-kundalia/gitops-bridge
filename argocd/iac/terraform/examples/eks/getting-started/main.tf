@@ -91,9 +91,10 @@ locals {
     enable_ack_emrcontainers                     = try(var.addons.enable_ack_emrcontainers, false)
     enable_ack_sfn                               = try(var.addons.enable_ack_sfn, false)
     enable_ack_eventbridge                       = try(var.addons.enable_ack_eventbridge, false)
+    enable_aws_argocd_ingress                    = try(var.addons.enable_aws_argocd_ingress, false)
   }
   oss_addons = {
-    enable_argocd                          = try(var.addons.enable_argocd, true)
+    enable_argocd                          = try(var.addons.enable_argocd, false)
     enable_argo_rollouts                   = try(var.addons.enable_argo_rollouts, false)
     enable_argo_events                     = try(var.addons.enable_argo_events, false)
     enable_argo_workflows                  = try(var.addons.enable_argo_workflows, false)

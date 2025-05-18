@@ -48,20 +48,22 @@ variable "addons" {
   description = "Kubernetes addons"
   type        = any
   default = {
+    enable_argocd = false
+    enable_aws_argocd_ingress                     = true
+    enable_argo_workflows               = false # set to false if enable_aws_argo_workflows_ingress = true
+    enable_aws_argo_workflows_ingress   = true # set to true if enable_argo_workflows is false
     enable_cert_manager                          = true
     # enable_aws_efs_csi_driver                    = true
     # enable_aws_fsx_csi_driver                    = true
     # enable_aws_cloudwatch_metrics                = true
     # enable_aws_privateca_issuer                  = true
     # enable_cluster_autoscaler                    = true
-    enable_argo_workflows               = false # set to false if enable_aws_argo_workflows_ingress = true
-    enable_aws_argo_workflows_ingress   = true # set to true if enable_argo_workflows is false
+   
 
     enable_external_dns                 = true # set to true if enable_aws_argo_workflows_ingress = true
     # enable_external_dns                          = true
 
     enable_aws_load_balancer_controller          = true
-    enable_aws_argocd_ingress           = true
     enable_aws_ebs_csi_resources                 = true # generate gp2 and gp3 storage classes for ebs-csi
     enable_external_secrets                      = true
 
