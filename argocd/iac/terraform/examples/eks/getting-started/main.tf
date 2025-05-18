@@ -170,8 +170,15 @@ module "gitops_bridge_bootstrap" {
     addons   = local.addons
   }
   apps       = local.argocd_apps
-  argocd     = { create_namespace = false }
-  depends_on = [kubernetes_namespace.argocd, kubernetes_secret.git_secrets]
+  argocd     = { 
+    create_namespace = false 
+    name          = "argo-cd"
+    chart_version = "8.0.4"
+    repository    = "https://argoproj.github.io/argo-helm"
+    namespace     = "argocd"
+    force_update  = true
+    values        = [templatefile("${path.module}/argocd/values.yaml", {})]}
+    depends_on = [kubernetes_namespace.argocd, kubernetes_secret.git_secrets]
 }
 
 ################################################################################

@@ -1,0 +1,121 @@
+redis-ha:
+  enabled: true
+  haproxy:
+    replicas: 3
+  redis:
+    replicas: 3
+
+controller:
+  replicas: 3
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+    requests:
+      cpu: 1
+      memory: 2Gi
+
+server:
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+    requests:
+      cpu: 1
+      memory: 2Gi
+
+repoServer:
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+    requests:
+      cpu: 1
+      memory: 2Gi
+
+applicationSet:
+  replicas: 3
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+    requests:
+      cpu: 1
+      memory: 2Gi
+
+dex:
+  enabled: true
+  resources:
+    limits:
+      cpu: 1
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+# configs:
+#   secret:
+#     createSecret: true
+#   cm:
+#     timeout.reconciliation: 180s
+#     resource.customizations: |
+#       networking.k8s.io/Ingress:
+#         health.lua: |
+#           hs = {}
+#           hs.status = "Healthy"
+#           return hs
+#     resource.exclusions: |
+#       - kinds:
+#         - Secret
+#         clusters:
+#         - "*"
+#         namespaces:
+#         - kube-system
+#     application.instanceLabelKey: argocd.argoproj.io/instance
+
+# rbac:
+#   policy.default: role:readonly
+#   policy.csv: |
+#     p, role:org-admin, applications, *, */*, allow
+#     p, role:org-admin, clusters, get, *, allow
+#     p, role:org-admin, repositories, *, *, allow
+#     p, role:org-admin, projects, *, *, allow
+#     g, prod-admins, role:org-admin
+
+# monitoring:
+#   enabled: true
+#   metrics:
+#     enabled: true
+#     serviceMonitor:
+#       enabled: true
+
+ha:
+  enabled: true
+
+global:
+  securityContext:
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+  networkPolicy:
+    create: true
+
+resources: 
+  limits:
+    cpu: 2
+    memory: 4Gi
+  requests:
+    cpu: 1
+    memory: 2Gi
