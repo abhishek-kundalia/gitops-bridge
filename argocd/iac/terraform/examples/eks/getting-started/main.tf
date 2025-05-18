@@ -92,6 +92,7 @@ locals {
     enable_ack_sfn                               = try(var.addons.enable_ack_sfn, false)
     enable_ack_eventbridge                       = try(var.addons.enable_ack_eventbridge, false)
     enable_aws_argocd_ingress                    = try(var.addons.enable_aws_argocd_ingress, false)
+    enable_aws_argo_workflows_ingress            = try(var.addons.enable_aws_argo_workflows_ingress, false)
   }
   oss_addons = {
     enable_argocd                          = try(var.addons.enable_argocd, false)
@@ -133,7 +134,7 @@ locals {
     },
     {
       argocd_hosts                = "${local.argocd_host}"
-      argo_workflows_hosts        = "${local.argo_workflows_host}"
+      argo_workflows_hosts        = "[${local.argo_workflows_host}]"
       external_dns_domain_filters = "[${local.domain_name}]"
       external_dns_policy         = "sync"
     },
