@@ -72,8 +72,9 @@ spec:
                 name: {{metadata.annotations.karpenter_service_account}}
                 annotations:
                   eks.amazonaws.com/role-arn: {{metadata.annotations.karpenter_iam_role_arn}}
-        - chart: '{{metadata.annotations.addons_repo_basepath}}environments/default/addons/{{values.addonChart}}/resources/charts/{{values.addonNodepoolChart}}'
-          repoURL: '{{values.addonNodepoolChartRepository}}'
+        - repoURL: '{{values.addonNodepoolChartRepository}}'
+          targetRevision: '{{metadata.annotations.addons_repo_revision}}'
+          path: '{{metadata.annotations.addons_repo_basepath}}environments/default/addons/{{values.addonChart}}/resources/charts/{{values.addonNodepoolChart}}'
           helm:
             releaseName: '{{values.addonNodepoolChartReleaseName}}'
             ignoreMissingValueFiles: true
