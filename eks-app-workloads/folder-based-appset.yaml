@@ -9,9 +9,9 @@ spec:
         repoURL: '{{metadata.annotations.workload_repo_url}}'
         revision: '{{metadata.annotations.workload_repo_revision}}'
         directories:
-          - path: '{{metadata.annotations.workload_repo_basepath}}eks-app-workloads/*'
+          - path: './eks-app-workloads/*'
             exclude: true
-          - path: '{{metadata.annotations.workload_repo_basepath}}eks-app-workloads/*/kustomization.yaml'
+          - path: './eks-app-workloads/*/kustomization.yaml'
   template:
     metadata:
       name: '{{path.basename}}'
