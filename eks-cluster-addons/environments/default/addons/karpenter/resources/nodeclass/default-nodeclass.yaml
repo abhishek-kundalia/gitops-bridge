@@ -34,7 +34,7 @@ spec:
     cpuCFSQuota: true
 
   # IAM role for the nodes
-  role: "karpenter-${cluster_name}"
+  role: "karpenter-{{metadata.annotations.aws_cluster_name}}"
 
   # Bottlerocket AMI configuration with specific version
   amiSelectorTerms:
@@ -60,9 +60,9 @@ spec:
   # Subnet selection based on cluster tags
   subnetSelectorTerms:
     - tags:
-        karpenter.sh/discovery: "${cluster_name}"
+        karpenter.sh/discovery: "{{metadata.annotations.aws_cluster_name}}"
 
   # Security group selection based on cluster tags
   securityGroupSelectorTerms:
     - tags:
-        karpenter.sh/discovery: "${cluster_name}"
+        karpenter.sh/discovery: "{{metadata.annotations.aws_cluster_name}}"
