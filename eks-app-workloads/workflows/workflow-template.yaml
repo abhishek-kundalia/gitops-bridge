@@ -4,7 +4,6 @@ metadata:
     name: demo-workflow
     namespace: argo-workflows
 spec:
-    serviceAccountName: argoworkflows-sa
     entrypoint: main
     templates:
         - name: main
