@@ -7,11 +7,11 @@ spec:
   generators:
     - git:
         repoURL: '{{metadata.annotations.workload_repo_url}}'
-        revision: HEAD
+        revision: '{{metadata.annotations.workload_repo_revision}}'
         directories:
-          - path: '{{metadata.annotations.workload_repo_basepath}}{{metadata.annotations.workload_repo_path}}/*'
+          - path: '{{metadata.annotations.workload_repo_basepath}}eks-app-workloads/*'
             exclude: true
-          - path: '{{metadata.annotations.workload_repo_basepath}}{{metadata.annotations.workload_repo_path}}/*/kustomization.yaml'
+          - path: '{{metadata.annotations.workload_repo_basepath}}eks-app-workloads/*/kustomization.yaml'
   template:
     metadata:
       name: '{{path.basename}}'
