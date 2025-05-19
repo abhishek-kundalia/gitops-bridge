@@ -4,26 +4,28 @@ metadata:
   name: folder-based-apps
   namespace: argocd
 spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
         repoURL: 'git@github.com:abhishek-kundalia/gitops-bridge'
         revision: 'main'
         directories:
-          - path: './eks-app-workloads/*'
+          - path: 'eks-app-workloads/*'
             exclude: true
-          - path: './eks-app-workloads/*/kustomization.yaml'
+          - path: 'eks-app-workloads/*/kustomization.yaml'
   template:
     metadata:
-      name: '{{path.basename}}'
+      name: '{{.path.basename}}'
     spec:
       project: default
       source:
         repoURL: '{{metadata.annotations.workload_repo_url}}'
         targetRevision: '{{metadata.annotations.workload_repo_revision}}'
-        path: '{{path}}'
+        path: '{{.path.path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{path.basename}}'
+        namespace: '{{.path.basename}}'
       syncPolicy:
         automated:
           prune: true
