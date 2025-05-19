@@ -6,8 +6,8 @@ metadata:
 spec:
   generators:
     - git:
-        repoURL: '{{metadata.annotations.workload_repo_url}}'
-        revision: '{{metadata.annotations.workload_repo_revision}}'
+        repoURL: 'git@github.com:abhishek-kundalia/gitops-bridge'
+        revision: 'main'
         directories:
           - path: './eks-app-workloads/*'
             exclude: true
