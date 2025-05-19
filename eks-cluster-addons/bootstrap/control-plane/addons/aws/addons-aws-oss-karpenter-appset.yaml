@@ -70,10 +70,12 @@ spec:
               crds:
                 ec2NodeClass:
                   role: "karpenter-{{metadata.annotations.aws_cluster_name}}"
-                  subnetSelector:
-                    karpenter.sh/discovery: "{{metadata.annotations.aws_cluster_name}}"
-                  securityGroupSelector:
-                    karpenter.sh/discovery: "{{metadata.annotations.aws_cluster_name}}"
+                  subnetSelectorTerms:
+                    - tags:
+                        karpenter.sh/discovery: "{{metadata.annotations.aws_cluster_name}}"
+                  securityGroupSelectorTerms:
+                    - tags:
+                        karpenter.sh/discovery: "{{metadata.annotations.aws_cluster_name}}"
                   tags:
                     karpenter.sh/discovery: "{{metadata.annotations.aws_cluster_name}}"
         - repoURL: '{{metadata.annotations.addons_repo_url}}'
