@@ -18,7 +18,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: git@github.com:abhishek-kundalia/gitops-bridge
+        repoURL: '{{.metadata.annotations.workload_repo_url}}'
         targetRevision: HEAD
         path: '{{.path.path}}'
       destination:
