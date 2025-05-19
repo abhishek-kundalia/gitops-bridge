@@ -11,8 +11,6 @@ spec:
         repoURL: 'git@github.com:abhishek-kundalia/gitops-bridge'
         revision: 'main'
         directories:
-          - path: 'eks-app-workloads/*'
-            exclude: true
           - path: 'eks-app-workloads/*/kustomization.yaml'
   template:
     metadata:
