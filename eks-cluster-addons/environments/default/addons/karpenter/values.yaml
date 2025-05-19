@@ -51,7 +51,9 @@ serviceAccount:
 ## Node template defaults
 nodeTemplate:
   # -- Default node labels
-  labels: {}
+  labels: 
+    node-type: "karpenter-managed"
+    provisioner: "karpenter"
   
   # -- Default node taints
   taints: []
@@ -72,10 +74,10 @@ nodePoolDefaults:
   # -- Default disruption settings
   disruption:
     # -- Whether to consolidate nodes when possible
-    consolidationPolicy: WhenEmpty
+    consolidationPolicy: WhenEmptyOrUnderutilized
     
     # -- Whether to expire nodes when possible
-    expireAfter: 720h # 30 days
+    expireAfter: 168h # 7 days
 
 ## Metrics configuration
 metrics:
@@ -86,3 +88,8 @@ metrics:
 webhook:
   # -- Port for the webhook
   port: 8443
+
+## Additional configuration for resources
+additionalResources:
+  # -- Whether to deploy the default NodePool and NodeClass
+  deployDefaultResources: true
