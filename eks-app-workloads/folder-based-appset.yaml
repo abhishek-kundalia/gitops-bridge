@@ -7,11 +7,14 @@ spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
-  - git:
-      repoURL: git@github.com:abhishek-kundalia/gitops-bridge
-      revision: HEAD
-      directories:
-      - path: eks-app-workloads/*
+    - merge:
+      mergeKeys: [server]
+      generators:
+        - git:
+            repoURL: git@github.com:abhishek-kundalia/gitops-bridge
+            revision: HEAD
+            directories:
+            - path: eks-app-workloads/*
   template:
     metadata:
       name: '{{.path.basename}}'
