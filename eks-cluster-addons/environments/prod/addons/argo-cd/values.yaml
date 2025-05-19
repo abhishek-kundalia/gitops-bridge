@@ -1,12 +1,12 @@
 redis-ha:
   enabled: true
   haproxy:
-    replicas: 3
+    replicas: 2
   redis:
-    replicas: 3
+    replicas: 2
 
 controller:
-  replicas: 3
+  replicas: 2
   resources:
     limits:
       cpu: 2
@@ -18,7 +18,7 @@ controller:
 server:
   autoscaling:
     enabled: true
-    minReplicas: 3
+    minReplicas: 2
     maxReplicas: 5
     targetCPUUtilizationPercentage: 70
     targetMemoryUtilizationPercentage: 80
@@ -33,7 +33,7 @@ server:
 repoServer:
   autoscaling:
     enabled: true
-    minReplicas: 3
+    minReplicas: 2
     maxReplicas: 5
     targetCPUUtilizationPercentage: 70
     targetMemoryUtilizationPercentage: 80
@@ -46,7 +46,7 @@ repoServer:
       memory: 2Gi
 
 applicationSet:
-  replicas: 3
+  replicas: 2
   resources:
     limits:
       cpu: 2
