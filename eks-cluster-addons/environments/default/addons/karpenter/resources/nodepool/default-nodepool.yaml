@@ -38,7 +38,7 @@ spec:
       nodeClassRef:
         group: karpenter.k8s.aws
         kind: EC2NodeClass
-        name: bottlerocket
+        name: bottlerocket-1
 
       # Node expiration configuration
       expireAfter: 168h # 7 * 24h = 168h

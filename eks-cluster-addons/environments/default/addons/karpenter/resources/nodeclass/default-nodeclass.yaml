@@ -2,7 +2,7 @@
 apiVersion: karpenter.k8s.aws/v1
 kind: EC2NodeClass
 metadata:
-  name: bottlerocket
+  name: bottlerocket-1
 spec:
   # Kubelet configuration for system resources and overhead
   kubelet:
