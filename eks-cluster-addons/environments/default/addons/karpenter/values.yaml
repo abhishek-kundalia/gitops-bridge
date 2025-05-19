@@ -1,0 +1,88 @@
+# Karpenter Helm chart values
+
+## Global settings
+global:
+  # -- Karpenter image registry
+  # registry: public.ecr.aws
+
+## Controller settings
+controller:
+  # -- Controller resource requests and limits
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+## Settings for Karpenter
+settings:
+  # -- AWS EKS Cluster name
+  # clusterName: "my-cluster"
+  
+  # -- AWS SQS queue name for node interruption events
+  # interruptionQueue: "karpenter-interruption-queue"
+  
+  # -- AWS Region
+  # region: "us-west-2"
+  
+  # -- Karpenter log level (debug, info, warn, error)
+  logLevel: "info"
+  
+  # -- Karpenter log format (json, text)
+  logFormat: "json"
+  
+  # -- Karpenter feature gates
+  featureGates:
+    # -- Enable drift detection to identify nodes that have drifted from spec
+    driftEnabled: true
+
+## Service account configuration
+serviceAccount:
+  # -- Service account name
+  # name: "karpenter"
+  
+  # -- Service account annotations
+  annotations: {}
+    # -- IAM role ARN for Karpenter service account
+    # eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/karpenter-controller"
+
+## Node template defaults
+nodeTemplate:
+  # -- Default node labels
+  labels: {}
+  
+  # -- Default node taints
+  taints: []
+  
+  # -- Default node metadata
+  metadata:
+    # -- Propagate labels from EC2 to Nodes
+    labels:
+      propagateLabels: true
+
+## Node class defaults
+nodeClassDefaults:
+  # -- Default AMI family to use (AL2, Bottlerocket, Ubuntu, etc.)
+  amiFamily: "Bottlerocket"
+
+## Node pool defaults
+nodePoolDefaults:
+  # -- Default disruption settings
+  disruption:
+    # -- Whether to consolidate nodes when possible
+    consolidationPolicy: WhenEmpty
+    
+    # -- Whether to expire nodes when possible
+    expireAfter: 720h # 30 days
+
+## Metrics configuration
+metrics:
+  # -- Whether to enable metrics
+  enabled: true
+
+## Webhook configuration
+webhook:
+  # -- Port for the webhook
+  port: 8443
