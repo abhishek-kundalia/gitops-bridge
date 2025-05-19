@@ -12,14 +12,16 @@ spec:
         revision: main
         directories:
           - path: eks-app-workloads/*
+            exclude: true
+          - path: eks-app-workloads/*/kustomization.yaml
   template:
     metadata:
       name: '{{.path.basename}}'
     spec:
       project: default
       source:
-        repoURL: '{{metadata.annotations.workload_repo_url}}'
-        targetRevision: '{{metadata.annotations.workload_repo_revision}}'
+        repoURL: 'git@github.com:abhishek-kundalia/gitops-bridge'
+        targetRevision: 'main'
         path: '{{.path.path}}'
       destination:
         server: https://kubernetes.default.svc
