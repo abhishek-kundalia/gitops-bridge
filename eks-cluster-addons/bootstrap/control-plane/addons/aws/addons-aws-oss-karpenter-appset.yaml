@@ -66,16 +66,31 @@ spec:
                 name: {{metadata.annotations.karpenter_service_account}}
                 annotations:
                   eks.amazonaws.com/role-arn: {{metadata.annotations.karpenter_iam_role_arn}}
-              # Set cluster name for nodepool and nodeclass templates
-              clusterName: {{metadata.annotations.aws_cluster_name}}
-              # Enable nodepool and nodeclass templates
-              nodeClass:
-                role: "karpenter-{{metadata.annotations.aws_cluster_name}}"
+              # Custom resources configuration
+              crds:
+                ec2NodeClass:
+                  role: "karpenter-{{metadata.annotations.aws_cluster_name}}"
+                  subnetSelector:
+                    karpenter.sh/discovery: "{{metadata.annotations.aws_cluster_name}}"
+                  securityGroupSelector:
+                    karpenter.sh/discovery: "{{metadata.annotations.aws_cluster_name}}"
+                  tags:
+                    karpenter.sh/discovery: "{{metadata.annotations.aws_cluster_name}}"
         - repoURL: '{{metadata.annotations.addons_repo_url}}'
           targetRevision: '{{metadata.annotations.addons_repo_revision}}'
-          path: '{{metadata.annotations.addons_repo_basepath}}environments/default/addons/{{values.addonChart}}/templates'
-          directory:
-            recurse: true
+          path: '{{metadata.annotations.addons_repo_basepath}}environments/default/addons/{{values.addonChart}}/crds'
+          kustomize:
+            commonLabels:
+              app.kubernetes.io/managed-by: argocd
+            commonAnnotations:
+              app.kubernetes.io/part-of: karpenter
+            images:
+              - public.ecr.aws/karpenter/controller:v1.4.0
+            namePrefix: "{{metadata.annotations.aws_cluster_name}}-"
+            buildOptions:
+              env:
+                - name: CLUSTER_NAME
+                  value: "{{metadata.annotations.aws_cluster_name}}"
       destination:
         namespace: '{{metadata.annotations.karpenter_namespace}}'
         name: '{{name}}'

@@ -1,0 +1,68 @@
+# EC2NodeClass defines the configuration for EC2 instances launched by Karpenter
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: bottlerocket
+spec:
+  # Kubelet configuration for system resources and overhead
+  kubelet:
+    podsPerCore: 10
+    maxPods: 110
+    systemReserved:
+      cpu: "200m"
+      memory: "200Mi"
+      ephemeral-storage: "1Gi"
+    kubeReserved:
+      cpu: "100m"
+      memory: "100Mi"
+      ephemeral-storage: "1Gi"
+    evictionHard:
+      memory.available: "5%"
+      nodefs.available: "10%"
+      nodefs.inodesFree: "10%"
+    evictionSoft:
+      memory.available: "500Mi"
+      nodefs.available: "15%"
+      nodefs.inodesFree: "15%"
+    evictionSoftGracePeriod:
+      memory.available: "1m"
+      nodefs.available: "1m"
+      nodefs.inodesFree: "1m"
+    evictionMaxPodGracePeriod: 60
+    imageGCHighThresholdPercent: 85
+    imageGCLowThresholdPercent: 80
+    cpuCFSQuota: true
+
+  # IAM role for the nodes
+  role: "karpenter-${CLUSTER_NAME}"
+
+  # Bottlerocket AMI configuration with specific version
+  amiSelectorTerms:
+    - alias: "bottlerocket@v1.32.0"  # Using Bottlerocket version 1.32.0
+
+  # Block device mappings for Bottlerocket OS
+  blockDeviceMappings:
+    # Root device for OS
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: "4Gi"
+        volumeType: gp3
+        encrypted: true
+        deleteOnTermination: true
+    # Data device for container resources (images and logs)
+    - deviceName: /dev/xvdb
+      ebs:
+        volumeSize: "20Gi"
+        volumeType: gp3
+        encrypted: true
+        deleteOnTermination: true
+
+  # Subnet selection based on cluster tags
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "${CLUSTER_NAME}"
+
+  # Security group selection based on cluster tags
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "${CLUSTER_NAME}"

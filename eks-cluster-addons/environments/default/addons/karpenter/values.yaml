@@ -89,80 +89,70 @@ webhook:
   # -- Port for the webhook
   port: 8443
 
-# Cluster name for resource discovery
-clusterName: "${CLUSTER_NAME}"
+# Custom resources to create with the Helm chart
+crds:
+  # EC2NodeClass resource
+  ec2NodeClass:
+    create: true
+    name: "bottlerocket"
+    role: "karpenter-${CLUSTER_NAME}"
+    amiFamily: "Bottlerocket"
+    amiVersion: "v1.32.0"
+    blockDeviceMappings:
+      - deviceName: "/dev/xvda"
+        ebs:
+          volumeSize: "4Gi"
+          volumeType: "gp3"
+          encrypted: true
+          deleteOnTermination: true
+      - deviceName: "/dev/xvdb"
+        ebs:
+          volumeSize: "20Gi"
+          volumeType: "gp3"
+          encrypted: true
+          deleteOnTermination: true
+    subnetSelector:
+      karpenter.sh/discovery: "${CLUSTER_NAME}"
+    securityGroupSelector:
+      karpenter.sh/discovery: "${CLUSTER_NAME}"
+    tags:
+      karpenter.sh/discovery: "${CLUSTER_NAME}"
 
-# NodeClass configuration
-nodeClass:
-  enabled: true
-  name: "bottlerocket"
-  role: "karpenter-${CLUSTER_NAME}"
-  kubelet:
-    podsPerCore: 10
-    maxPods: 110
-    systemReserved:
-      cpu: "200m"
-      memory: "200Mi"
-      ephemeralStorage: "1Gi"
-    kubeReserved:
-      cpu: "100m"
-      memory: "100Mi"
-      ephemeralStorage: "1Gi"
-    evictionHard:
-      memoryAvailable: "5%"
-      nodefsAvailable: "10%"
-      nodefsInodesFree: "10%"
-    evictionSoft:
-      memoryAvailable: "500Mi"
-      nodefsAvailable: "15%"
-      nodefsInodesFree: "15%"
-    evictionSoftGracePeriod:
-      memoryAvailable: "1m"
-      nodefsAvailable: "1m"
-      nodefsInodesFree: "1m"
-    evictionMaxPodGracePeriod: 60
-    imageGCHighThresholdPercent: 85
-    imageGCLowThresholdPercent: 80
-    cpuCFSQuota: true
-  amiSelectorTerms:
-    alias: "bottlerocket@v1.32.0"
-  blockDeviceMappings:
-    root:
-      deviceName: "/dev/xvda"
-      volumeSize: "4Gi"
-      volumeType: "gp3"
-      encrypted: true
-      deleteOnTermination: true
-    data:
-      deviceName: "/dev/xvdb"
-      volumeSize: "20Gi"
-      volumeType: "gp3"
-      encrypted: true
-      deleteOnTermination: true
-
-# NodePool configuration
-nodePool:
-  enabled: true
-  name: "bottlerocket"
-  requirements:
-    arch: ["arm64", "amd64"]
-    os: ["linux"]
-    capacityType: ["spot", "on-demand"]
-    instanceFamily: ["m6g", "c6g", "c7g", "t4g", "i4g", "im4gn", "c5"]
-    instanceSize: ["nano", "micro", "small", "medium", "large", "xlarge", "2xlarge"]
-  expireAfter: "168h"
-  limits:
-    cpu: 1000
-  disruption:
-    consolidationPolicy: "WhenEmptyOrUnderutilized"
-    consolidateAfter: "30s"
-    budgets:
-      - nodes: "10%"
-        schedule: "0 9 * * 1-5"
-        duration: "12h"
-      - nodes: "50%"
-        schedule: "0 21 * * 1-5"
-        duration: "12h"
-      - nodes: "10%"
-        schedule: "0 0 * * 0,6"
-        duration: "24h"
+  # NodePool resource
+  nodePool:
+    create: true
+    name: "bottlerocket"
+    requirements:
+      - key: "kubernetes.io/arch"
+        operator: "In"
+        values: ["arm64", "amd64"]
+      - key: "kubernetes.io/os"
+        operator: "In"
+        values: ["linux"]
+      - key: "karpenter.sh/capacity-type"
+        operator: "In"
+        values: ["spot", "on-demand"]
+      - key: "karpenter.k8s.aws/instance-family"
+        operator: "In"
+        values: ["m6g", "c6g", "c7g", "t4g", "i4g", "im4gn", "c5"]
+      - key: "karpenter.k8s.aws/instance-size"
+        operator: "In"
+        values: ["nano", "micro", "small", "medium", "large", "xlarge", "2xlarge"]
+    limits:
+      cpu: 1000
+    disruption:
+      consolidationPolicy: "WhenEmptyOrUnderutilized"
+      consolidateAfter: "30s"
+      budgets:
+        - nodes: "10%"
+          schedule: "0 9 * * 1-5"
+          duration: "12h"
+        - nodes: "50%"
+          schedule: "0 21 * * 1-5"
+          duration: "12h"
+        - nodes: "10%"
+          schedule: "0 0 * * 0,6"
+          duration: "24h"
+    nodeClassRef:
+      name: "bottlerocket"
+    expireAfter: "168h"
