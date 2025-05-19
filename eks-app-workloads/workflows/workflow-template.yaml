@@ -1,76 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
-kind: WorkflowTemplate
+kind: Workflow
 metadata:
-  name: python-scripts-dag
+    name: demo-workflow
 spec:
-  entrypoint: scripts-dag
-  arguments:
-    parameters:
-    - name: input-param
-      value: "default-value"  # Default value that will be patched by Kustomize
-  outputs:
-    parameters:
-    - name: workflow-result
-      valueFrom:
-        parameter: "{{tasks.run-script2.outputs.parameters.final_result}}"
-
-  templates:
-  - name: scripts-dag
-    dag:
-      tasks:
-      - name: run-script1
-        template: python-script1
-        arguments:
-          parameters:
-          - name: param
-            value: "{{workflow.parameters.input-param}}"
-          
-      - name: run-script2
-        template: python-script2
-        dependencies: [run-script1]  # This makes script2 run after script1
-        arguments:
-          parameters:
-          - name: param
-            value: "{{tasks.run-script1.outputs.parameters.result}}"
-          - name: original-param
-            value: "{{workflow.parameters.input-param}}"
-
-  - name: python-script1
-    inputs:
-      parameters:
-      - name: param
-    outputs:
-      parameters:
-      - name: result
-        valueFrom:
-          path: /tmp/result
+    entrypoint: main
+    templates:
+    - name: main
     container:
-      image: python:3.8  # Use any Python image
-      command: [sh, -c]
-      args: ["python /mnt/scripts/script1.py {{inputs.parameters.param}} | tee /dev/stderr | grep '::set-output' | sed 's/::set-output name=result:://g' > /tmp/result"]
-      volumeMounts:
-      - name: scripts-volume
-        mountPath: /mnt/scripts
-
-  - name: python-script2
-    inputs:
-      parameters:
-      - name: param
-      - name: original-param
-    outputs:
-      parameters:
-      - name: final_result
-        valueFrom:
-          path: /tmp/final_result
-    container:
-      image: python:3.8
-      command: [sh, -c]
-      args: ["python /mnt/scripts/script2.py {{inputs.parameters.param}} {{inputs.parameters.original-param}} | grep '::set-output' | sed 's/::set-output name=final_result:://g' > /tmp/final_result"]
-      volumeMounts:
-      - name: scripts-volume
-        mountPath: /mnt/scripts
-
-  volumes:
-  - name: scripts-volume
-    configMap:
-      name: scripts-configmap
+        image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "echo 'The first step of the Workflow'"]
