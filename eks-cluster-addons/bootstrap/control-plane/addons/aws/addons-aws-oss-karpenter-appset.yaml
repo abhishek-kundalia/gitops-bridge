@@ -20,9 +20,8 @@ spec:
                 # argocd repo add public.ecr.aws --type helm --name aws-public-ecr --enable-oci
                 addonChartRepository: public.ecr.aws
                 addonNodepoolChart: karpenter-resources
+                addonNodepoolChartNodeClassName: karpenter-bridge
                 addonNodepoolChartReleaseName: karpenter-resources
-                addonNodepoolChartRepositoryNamespace: karpenter-resources
-                addonNodepoolChartVersion: 0.1.0
                 # using local chart in the repo
                 addonNodepoolChartRepository: '{{metadata.annotations.addons_repo_url}}'
               selector:
@@ -81,13 +80,25 @@ spec:
             valueFiles:
               - $values/{{metadata.annotations.addons_repo_basepath}}environments/default/addons/{{values.addonChart}}/resources/charts/{{values.addonNodepoolChart}}/values.yaml
             values: |
-              settings:
-                clusterName: {{metadata.annotations.aws_cluster_name}}
-                interruptionQueue: {{metadata.annotations.karpenter_sqs_queue_name}}
-              serviceAccount:
-                name: {{metadata.annotations.karpenter_service_account}}
-                annotations:
-                  eks.amazonaws.com/role-arn: {{metadata.annotations.karpenter_iam_role_arn}}  
+              ec2NodeClass:
+                name: {{values.addonNodepoolChartNodeClassName}}
+                spec:
+                  role: '{{values.addonChart}}-{{name}}'
+                  subnetSelectorTerms:
+                    - tags:
+                        karpenter.sh/discovery: "{{name}}"
+                  securityGroupSelectorTerms:
+                    - tags:
+                        karpenter.sh/discovery: "{{name}}"
+              nodePool:
+                name: {{values.addonNodepoolChartNodeClassName}}-nodepool
+                spec:
+                  template:
+                    spec:
+                      nodeClassRef:
+                        name: {{values.addonNodepoolChartNodeClassName}}
+
+
       destination:
         namespace: '{{metadata.annotations.karpenter_namespace}}'
         name: '{{name}}'

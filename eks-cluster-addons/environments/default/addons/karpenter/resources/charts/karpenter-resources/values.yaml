@@ -50,7 +50,7 @@ ec2NodeClass:
       cpuCFSQuota: true
 
     # IAM role for the nodes
-    role: "karpenter-eks-gitops-bridge"
+    # role: "karpenter-eks-gitops-bridge"
 
     # Bottlerocket AMI configuration with specific version
     amiSelectorTerms:
@@ -111,14 +111,14 @@ ec2NodeClass:
     #   enabled = true           # Enable collection of node-level metrics
 
     # Subnet selection based on cluster tags
-    subnetSelectorTerms:
-      - tags:
-          karpenter.sh/discovery: "eks-gitops-bridge"
+    # subnetSelectorTerms:
+    #   - tags:
+    #       karpenter.sh/discovery: "eks-gitops-bridge"
 
     # Security group selection based on cluster tags
-    securityGroupSelectorTerms:
-      - tags:
-          karpenter.sh/discovery: "eks-gitops-bridge"
+    # securityGroupSelectorTerms:
+    #   - tags:
+    #       karpenter.sh/discovery: "eks-gitops-bridge"
 
     # Optional: Tags to apply to EC2 instances
     tags:
@@ -126,7 +126,7 @@ ec2NodeClass:
       KarpenterNodePoolName: default
       NodeType: default
       intent: apps
-      karpenter.sh/discovery: "eks-gitops-bridge"
+      # karpenter.sh/discovery: "eks-gitops-bridge"
       project: karpenter-blueprints
 
 # NodePool configuration
@@ -134,7 +134,7 @@ nodePool:
   # Whether to create the NodePool resource
   create: true
   # Name of the NodePool
-  name: "bottlerocket"
+  # name: "bottlerocket"
   # Labels to apply to the NodePool
   labels: {}
   # Annotations to apply to the NodePool
@@ -176,7 +176,7 @@ nodePool:
         nodeClassRef:
           group: karpenter.k8s.aws
           kind: EC2NodeClass
-          name: "bottlerocket"
+          # name: "bottlerocket"
 
         # Node expiration configuration
         expireAfter: 168h # 7 * 24h = 168h
