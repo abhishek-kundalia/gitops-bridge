@@ -89,7 +89,80 @@ webhook:
   # -- Port for the webhook
   port: 8443
 
-## Additional configuration for resources
-additionalResources:
-  # -- Whether to deploy the default NodePool and NodeClass
-  deployDefaultResources: true
+# Cluster name for resource discovery
+clusterName: "${CLUSTER_NAME}"
+
+# NodeClass configuration
+nodeClass:
+  enabled: true
+  name: "bottlerocket"
+  role: "karpenter-${CLUSTER_NAME}"
+  kubelet:
+    podsPerCore: 10
+    maxPods: 110
+    systemReserved:
+      cpu: "200m"
+      memory: "200Mi"
+      ephemeralStorage: "1Gi"
+    kubeReserved:
+      cpu: "100m"
+      memory: "100Mi"
+      ephemeralStorage: "1Gi"
+    evictionHard:
+      memoryAvailable: "5%"
+      nodefsAvailable: "10%"
+      nodefsInodesFree: "10%"
+    evictionSoft:
+      memoryAvailable: "500Mi"
+      nodefsAvailable: "15%"
+      nodefsInodesFree: "15%"
+    evictionSoftGracePeriod:
+      memoryAvailable: "1m"
+      nodefsAvailable: "1m"
+      nodefsInodesFree: "1m"
+    evictionMaxPodGracePeriod: 60
+    imageGCHighThresholdPercent: 85
+    imageGCLowThresholdPercent: 80
+    cpuCFSQuota: true
+  amiSelectorTerms:
+    alias: "bottlerocket@v1.32.0"
+  blockDeviceMappings:
+    root:
+      deviceName: "/dev/xvda"
+      volumeSize: "4Gi"
+      volumeType: "gp3"
+      encrypted: true
+      deleteOnTermination: true
+    data:
+      deviceName: "/dev/xvdb"
+      volumeSize: "20Gi"
+      volumeType: "gp3"
+      encrypted: true
+      deleteOnTermination: true
+
+# NodePool configuration
+nodePool:
+  enabled: true
+  name: "bottlerocket"
+  requirements:
+    arch: ["arm64", "amd64"]
+    os: ["linux"]
+    capacityType: ["spot", "on-demand"]
+    instanceFamily: ["m6g", "c6g", "c7g", "t4g", "i4g", "im4gn", "c5"]
+    instanceSize: ["nano", "micro", "small", "medium", "large", "xlarge", "2xlarge"]
+  expireAfter: "168h"
+  limits:
+    cpu: 1000
+  disruption:
+    consolidationPolicy: "WhenEmptyOrUnderutilized"
+    consolidateAfter: "30s"
+    budgets:
+      - nodes: "10%"
+        schedule: "0 9 * * 1-5"
+        duration: "12h"
+      - nodes: "50%"
+        schedule: "0 21 * * 1-5"
+        duration: "12h"
+      - nodes: "10%"
+        schedule: "0 0 * * 0,6"
+        duration: "24h"
