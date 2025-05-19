@@ -22,7 +22,7 @@ spec:
       source:
         repoURL: 'git@github.com:abhishek-kundalia/gitops-bridge'
         targetRevision: 'main'
-        path: '{{.path.path}}'
+        path: '{{.path}}'
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{.path.basename}}'
