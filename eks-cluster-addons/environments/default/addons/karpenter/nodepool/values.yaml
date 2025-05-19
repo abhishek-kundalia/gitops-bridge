@@ -1,21 +1,15 @@
-globalLabels: 
-  environment: production
+globalLabels: {}
 
-globalAnnotations: 
-  environment.type: production
+globalAnnotations: {}
 
 nodePool:
   default:
     # Labels are arbitrary key-values that are applied to all nodes
-    labels:
-      environment: production
-      nodeType: default
-      intent: apps
+    # Labels are arbitrary key-values that are applied to all nodes
+    labels: {}
  
     # Annotations are arbitrary key-values that are applied to all nodes
-    annotations:
-      environment.type: production
-      project: karpenter-blueprints
+    annotations: {}
 
     # References the Cloud Provider's NodeClass resource
     nodeClassRef:
