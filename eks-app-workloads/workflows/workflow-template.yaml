@@ -1,16 +1,13 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
+namespace: workflows
 metadata:
-  generateName: hello-world-
+    name: demo-workflow
 spec:
-  entrypoint: whalesay
-  templates:
-  - name: whalesay
+    entrypoint: main
+    templates:
+        - name: main
     container:
-      image: docker/whalesay
-      command: [cowsay]
-      args: ["hello world"]
-      resources:
-        limits:
-          memory: 32Mi
-          cpu: 100m
+        image: busybox
+        command: ["/bin/sh"]
+        args: ["-c", "echo 'The first step of the Workflow'"]
