@@ -1,0 +1,57 @@
+{{- if .Values.nodePool.create }}
+# NodePool defines how Karpenter should provision and manage nodes
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: {{ .Values.nodePool.name }}
+  labels:
+    {{- include "karpenter-resources.labels" . | nindent 4 }}
+    {{- with .Values.nodePool.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.nodePool.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  # Template defines the configuration for nodes that Karpenter will provision
+  template:
+    spec:
+      # Requirements specify constraints for node provisioning
+      {{- with .Values.nodePool.spec.template.spec.requirements }}
+      requirements:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      # Reference to the EC2NodeClass
+      nodeClassRef:
+        group: {{ .Values.nodePool.spec.template.spec.nodeClassRef.group | default "karpenter.k8s.aws" }}
+        kind: {{ .Values.nodePool.spec.template.spec.nodeClassRef.kind | default "EC2NodeClass" }}
+        name: {{ .Values.nodePool.spec.template.spec.nodeClassRef.name }}
+
+      # Node expiration configuration
+      {{- if .Values.nodePool.spec.template.spec.expireAfter }}
+      expireAfter: {{ .Values.nodePool.spec.template.spec.expireAfter }}
+      {{- end }}
+
+  # Maximum CPU cores allowed across all nodes in this pool
+  {{- with .Values.nodePool.spec.limits }}
+  limits:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  # Node consolidation and disruption settings
+  {{- with .Values.nodePool.spec.disruption }}
+  disruption:
+    {{- if .consolidationPolicy }}
+    consolidationPolicy: {{ .consolidationPolicy }}
+    {{- end }}
+    {{- if .consolidateAfter }}
+    consolidateAfter: {{ .consolidateAfter }}
+    {{- end }}
+    {{- with .budgets }}
+    budgets:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,61 @@
+{{- if .Values.ec2NodeClass.create }}
+# EC2NodeClass defines the configuration for EC2 instances launched by Karpenter
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: {{ .Values.ec2NodeClass.name }}
+  labels:
+    {{- include "karpenter-resources.labels" . | nindent 4 }}
+    {{- with .Values.ec2NodeClass.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.ec2NodeClass.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ec2NodeClass.spec.kubelet }}
+  # Kubelet configuration for system resources and overhead
+  kubelet:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  # IAM role for the nodes
+  role: {{ .Values.ec2NodeClass.spec.role | quote }}
+
+  # AMI configuration
+  {{- with .Values.ec2NodeClass.spec.amiSelectorTerms }}
+  amiSelectorTerms:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  # Block device mappings
+  {{- with .Values.ec2NodeClass.spec.blockDeviceMappings }}
+  blockDeviceMappings:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  # Node configuration via userData
+  {{- if .Values.ec2NodeClass.spec.userData }}
+  userData: |
+    {{- .Values.ec2NodeClass.spec.userData | nindent 4 }}
+  {{- end }}
+
+  # Subnet selection based on cluster tags
+  {{- with .Values.ec2NodeClass.spec.subnetSelectorTerms }}
+  subnetSelectorTerms:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  # Security group selection based on cluster tags
+  {{- with .Values.ec2NodeClass.spec.securityGroupSelectorTerms }}
+  securityGroupSelectorTerms:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  # Optional: Tags to apply to EC2 instances
+  {{- with .Values.ec2NodeClass.spec.tags }}
+  tags:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

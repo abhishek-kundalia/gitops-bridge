@@ -19,13 +19,12 @@ spec:
                 # using oci repostory already configure in argocd
                 # argocd repo add public.ecr.aws --type helm --name aws-public-ecr --enable-oci
                 addonChartRepository: public.ecr.aws
-                addonNodepoolChart: karpenter-nodepool
-                addonNodepoolChartReleaseName: karpenter
-                addonNodepoolChartRepositoryNamespace: karpenter-nodepool
-                addonNodepoolChartVersion: 1.3.0
-                # using oci repostory already configure in argocd
-                # argocd repo add public.ecr.aws --type helm --name aws-public-ecr --enable-oci
-                addonNodepoolChartRepository: https://younsl.xyz/
+                addonNodepoolChart: karpenter-resources
+                addonNodepoolChartReleaseName: karpenter-resources
+                addonNodepoolChartRepositoryNamespace: karpenter-resources
+                addonNodepoolChartVersion: 0.1.0
+                # using local chart in the repo
+                addonNodepoolChartRepository: '{{metadata.annotations.addons_repo_url}}'
               selector:
                 matchExpressions:
                   - key: akuity.io/argo-cd-cluster-name
@@ -73,14 +72,14 @@ spec:
                 name: {{metadata.annotations.karpenter_service_account}}
                 annotations:
                   eks.amazonaws.com/role-arn: {{metadata.annotations.karpenter_iam_role_arn}}
-        - chart: '{{values.addonNodepoolChart}}'
+        - chart: '{{metadata.annotations.addons_repo_basepath}}environments/default/addons/{{values.addonChart}}/resources/charts/{{values.addonNodepoolChart}}'
           repoURL: '{{values.addonNodepoolChartRepository}}'
-          targetRevision: '{{values.addonNodepoolChartVersion}}'
+          targetRevision: '{{metadata.annotations.addons_repo_revision}}'
           helm:
             releaseName: '{{values.addonNodepoolChartReleaseName}}'
             ignoreMissingValueFiles: true
             valueFiles:
-              - $values/{{metadata.annotations.addons_repo_basepath}}environments/default/addons/{{values.addonChart}}/nodepool/values.yaml
+              - $values/{{metadata.annotations.addons_repo_basepath}}environments/default/addons/{{values.addonChart}}/resources/charts/{{values.addonNodepoolChart}}/values.yaml
             values: |
               settings:
                 clusterName: {{metadata.annotations.aws_cluster_name}}

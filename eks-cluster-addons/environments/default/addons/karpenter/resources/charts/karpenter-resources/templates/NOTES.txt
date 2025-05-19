@@ -1,0 +1,26 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+This chart deploys the following Karpenter resources:
+
+{{- if .Values.ec2NodeClass.create }}
+1. EC2NodeClass: {{ .Values.ec2NodeClass.name }}
+{{- end }}
+
+{{- if .Values.nodePool.create }}
+2. NodePool: {{ .Values.nodePool.name }}
+{{- end }}
+
+These resources are configured to work together to provide node provisioning for your EKS cluster.
+
+To verify the installation, run:
+
+  kubectl get ec2nodeclasses,nodepools
+
+For more information on Karpenter configuration, visit:
+https://karpenter.sh/docs/
+
+To customize the configuration, modify the values.yaml file and upgrade the release:
+
+  helm upgrade {{ .Release.Name }} .

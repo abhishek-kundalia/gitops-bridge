@@ -1,0 +1,206 @@
+# Values for karpenter-resources Helm chart
+
+# Global settings
+global:
+  # Labels to apply to all resources
+  labels: {}
+  # Annotations to apply to all resources
+  annotations: {}
+
+# EC2NodeClass configuration
+ec2NodeClass:
+  # Whether to create the EC2NodeClass resource
+  create: true
+  # Name of the EC2NodeClass
+  name: "bottlerocket"
+  # Labels to apply to the EC2NodeClass
+  labels: {}
+  # Annotations to apply to the EC2NodeClass
+  annotations: {}
+  
+  # EC2NodeClass specification
+  spec:
+    # Kubelet configuration for system resources and overhead
+    kubelet:
+      podsPerCore: 10
+      maxPods: 110
+      systemReserved:
+        cpu: "200m"
+        memory: "200Mi"
+        ephemeral-storage: "1Gi"
+      kubeReserved:
+        cpu: "100m"
+        memory: "100Mi"
+        ephemeral-storage: "1Gi"
+      evictionHard:
+        memory.available: "5%"
+        nodefs.available: "10%"
+        nodefs.inodesFree: "10%"
+      evictionSoft:
+        memory.available: "500Mi"
+        nodefs.available: "15%"
+        nodefs.inodesFree: "15%"
+      evictionSoftGracePeriod:
+        memory.available: "1m"
+        nodefs.available: "1m"
+        nodefs.inodesFree: "1m"
+      evictionMaxPodGracePeriod: 60
+      imageGCHighThresholdPercent: 85
+      imageGCLowThresholdPercent: 80
+      cpuCFSQuota: true
+
+    # IAM role for the nodes
+    role: "karpenter-eks-gitops-bridge"
+
+    # Bottlerocket AMI configuration with specific version
+    amiSelectorTerms:
+      - alias: "bottlerocket@v1.32.0"
+
+    # Block device mappings for Bottlerocket OS
+    blockDeviceMappings:
+      # Root device for OS
+      - deviceName: /dev/xvda
+        ebs:
+          volumeSize: "4Gi"
+          volumeType: gp3
+          encrypted: true
+          deleteOnTermination: true
+      # Data device for container resources (images and logs)
+      - deviceName: /dev/xvdb
+        ebs:
+          volumeSize: "20Gi"
+          volumeType: gp3
+          encrypted: true
+          deleteOnTermination: true
+
+    # Node configuration via userData (commented out by default)
+    # userData: |
+    #   [settings.kubernetes]
+    #   api-server = "https://0E8BBAF852397CB8823F5AF07A5499ED.gr7.ap-southeast-1.eks.amazonaws.com"
+    #   cluster-name = "dev-pocketfm-qa-k8s"
+      
+    #   # Enable SSM and admin access for node management
+    #   [settings.host-containers.ssm]
+    #   enabled = true
+    #   [settings.host-containers.admin]
+    #   enabled = true
+    #   superpowered = true
+
+    #   # System settings for optimal performance and security
+    #   [settings.kernel]
+    #   lockdown = "integrity"
+      
+    #   # Container runtime configuration
+    #   [settings.container-runtime]
+    #   max-containers = 200
+    #   enable-unprivileged-ports = true
+    #   enable-unprivileged-icmp = true
+
+    #   # Update settings - using specific version for stability
+    #   [settings.updates]
+    #   metadata-urls = ["https://updates.bottlerocket.aws"]
+    #   version-lock = "1.31.0"  # Pin to specific Bottlerocket version
+
+    #   # Boot settings for enhanced security
+    #   [settings.boot]
+    #   boot-keys = true          # Enable secure boot for enhanced security
+    #   reboot-to-reconcile = false  # Prevent automatic reboots during updates
+
+    #   # Enable node metrics collection
+    #   [settings.metrics]
+    #   enabled = true           # Enable collection of node-level metrics
+
+    # Subnet selection based on cluster tags
+    subnetSelectorTerms:
+      - tags:
+          karpenter.sh/discovery: "eks-gitops-bridge"
+
+    # Security group selection based on cluster tags
+    securityGroupSelectorTerms:
+      - tags:
+          karpenter.sh/discovery: "eks-gitops-bridge"
+
+    # Optional: Tags to apply to EC2 instances
+    tags:
+      IntentLabel: apps
+      KarpenterNodePoolName: default
+      NodeType: default
+      intent: apps
+      karpenter.sh/discovery: "eks-gitops-bridge"
+      project: karpenter-blueprints
+
+# NodePool configuration
+nodePool:
+  # Whether to create the NodePool resource
+  create: true
+  # Name of the NodePool
+  name: "bottlerocket"
+  # Labels to apply to the NodePool
+  labels: {}
+  # Annotations to apply to the NodePool
+  annotations: {}
+  
+  # NodePool specification
+  spec:
+    # Template defines the configuration for nodes that Karpenter will provision
+    template:
+      spec:
+        # Requirements specify constraints for node provisioning
+        requirements:
+          # Support both ARM64 (e.g., m6g, c6g) and AMD64 (e.g., c5) architectures
+          - key: kubernetes.io/arch
+            operator: In
+            values: ["arm64", "amd64"]
+
+          # Only provision Linux nodes
+          - key: kubernetes.io/os
+            operator: In
+            values: ["linux"]
+
+          # Allow both spot and on-demand instances
+          - key: karpenter.sh/capacity-type
+            operator: In
+            values: ["spot", "on-demand"]
+
+          # Specify allowed instance families
+          - key: karpenter.k8s.aws/instance-family
+            operator: In
+            values: ["m6g", "c6g", "c7g", "t4g", "i4g", "im4gn", "c5"]
+
+          # Allow instance sizes from nano to 2xlarge
+          - key: karpenter.k8s.aws/instance-size
+            operator: In
+            values: ["nano", "micro", "small", "medium", "large", "xlarge", "2xlarge"]
+
+        # Reference to the EC2NodeClass
+        nodeClassRef:
+          group: karpenter.k8s.aws
+          kind: EC2NodeClass
+          name: "bottlerocket"
+
+        # Node expiration configuration
+        expireAfter: 168h # 7 * 24h = 168h
+
+    # Maximum CPU cores allowed across all nodes in this pool
+    limits:
+      cpu: 1000
+
+    # Node consolidation and disruption settings
+    disruption:
+      consolidationPolicy: WhenEmptyOrUnderutilized
+      consolidateAfter: 30s
+      budgets:
+        # Work Hours (Mon-Fri, 9 AM - 9 PM IST)
+        - nodes: "10%"
+          schedule: "0 9 * * 1-5"
+          duration: "12h"
+
+        # Night Hours (Mon-Fri, 9 PM - 9 AM IST)
+        - nodes: "50%"
+          schedule: "0 21 * * 1-5"
+          duration: "12h"
+
+        # Weekend (Sat-Sun)
+        - nodes: "10%"
+          schedule: "0 0 * * 0,6"
+          duration: "24h"
