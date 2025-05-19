@@ -1,25 +1,25 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: folder-appset
+  name: folder-based-apps
   namespace: argocd
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
-  - git:
-      repoURL: git@github.com:abhishek-kundalia/gitops-bridge
-      revision: HEAD
-      directories:
-      - path: eks-app-workloads/*
+    - git:
+        repoURL: git@github.com:abhishek-kundalia/gitops-bridge
+        revision: main
+        directories:
+          - path: eks-app-workloads/*
   template:
     metadata:
       name: '{{.path.basename}}'
     spec:
       project: default
       source:
-        repoURL: git@github.com:abhishek-kundalia/gitops-bridge
-        targetRevision: HEAD
+        repoURL: 'git@github.com:abhishek-kundalia/gitops-bridge'
+        targetRevision: 'main'
         path: '{{.path.path}}'
       destination:
         server: https://kubernetes.default.svc
@@ -29,4 +29,4 @@ spec:
           prune: true
           selfHeal: true
         syncOptions:
-        - CreateNamespace=true
+          - CreateNamespace=true

@@ -1,13 +1,13 @@
 apiVersion: argoproj.io/v1alpha1
-kind: Workflow
-namespace: workflows
+kind: WorkflowTemplate
 metadata:
     name: demo-workflow
+    namespace: argo-workflows
 spec:
     entrypoint: main
     templates:
         - name: main
-    container:
-        image: busybox
-        command: ["/bin/sh"]
-        args: ["-c", "echo 'The first step of the Workflow'"]
+          container:
+            image: busybox
+            command: ["/bin/sh"]
+            args: ["-c", "echo 'The first step of the Workflow'"]
