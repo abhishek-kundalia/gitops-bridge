@@ -23,4 +23,6 @@ spec:
         namespace: argocd
         name: '{{name}}'
       syncPolicy:
-        automated: {}
+        automated:
+          prune: true  # No need to prune for logical grouping
+          selfHeal: true  # No syncing needed

@@ -26,9 +26,11 @@ spec:
       syncPolicy:
         automated:
           allowEmpty: true
+          prune: true  # No need to prune for logical grouping
+          selfHeal: true  # No syncing needed
         syncOptions:
         - CreateNamespace=true
         retry:
           backoff:
             duration: 1m
-          limit: 60
+          limit: 5
