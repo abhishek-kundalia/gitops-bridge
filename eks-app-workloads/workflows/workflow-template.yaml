@@ -1,5 +1,6 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
+namespace: workflows
 metadata:
     name: demo-workflow
 spec:

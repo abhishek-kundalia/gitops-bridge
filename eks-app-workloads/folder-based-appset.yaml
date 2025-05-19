@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: folder-based-apps
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: '{{metadata.annotations.workload_repo_url}}'
+        revision: '{{metadata.annotations.workload_repo_revision}}'
+        directories:
+          - path: '{{metadata.annotations.workload_repo_basepath}}{{metadata.annotations.workload_repo_path}}/*'
+            exclude: true
+          - path: '{{metadata.annotations.workload_repo_basepath}}{{metadata.annotations.workload_repo_path}}/*/kustomization.yaml'
+  template:
+    metadata:
+      name: '{{path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: '{{metadata.annotations.workload_repo_url}}'
+        targetRevision: '{{metadata.annotations.workload_repo_revision}}'
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{path.basename}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
