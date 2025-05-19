@@ -7,7 +7,7 @@ spec:
   generators:
     - git:
         repoURL: '{{metadata.annotations.workload_repo_url}}'
-        revision: '{{metadata.annotations.workload_repo_revision}}'
+        revision: HEAD
         directories:
           - path: '{{metadata.annotations.workload_repo_basepath}}{{metadata.annotations.workload_repo_path}}/*'
             exclude: true
