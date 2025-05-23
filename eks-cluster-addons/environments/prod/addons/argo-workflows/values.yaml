@@ -56,13 +56,14 @@ workflow:
   namespace:
   serviceAccount:
     # -- Specifies whether a service account should be created
-    create: false
+    create: true
     # -- Labels applied to created service account
-    labels: {}
+    labels:
+      app.kubernetes.io/part-of: argo-workflows
     # -- Annotations applied to created service account
     annotations: {}
     # -- Service account which is used to run workflows
-    name: "argo-workflow"
+    name: "argoworkflows-sa"
     # -- Secrets with credentials to pull images from a private registry. Same format as `.Values.images.pullSecrets`
     pullSecrets: []
   rbac:
@@ -138,7 +139,7 @@ controller:
     # -- Port is the port where metrics are emitted
     port: 9090
     # -- How often custom metrics are cleared from memory
-    metricsTTL: ""
+    metricsTTL: "1h"
     # -- Flag that instructs prometheus to ignore metric emission errors.
     ignoreErrors: false
     # --  Flag that use a self-signed cert for TLS
@@ -151,9 +152,9 @@ controller:
     servicePortName: metrics
     # -- Flag to enable headless service
     headlessService: false
-    # -- When true, honorLabels preserves the metric’s labels when they collide with the target’s labels.
+    # -- When true, honorLabels preserves the metric's labels when they collide with the target's labels.
     ## Ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#honorlabels
-    honorLabels: false
+    honorLabels: true
     # -- ServiceMonitor relabel configs to apply to samples before scraping
     ## Ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
     relabelings: []
@@ -173,30 +174,30 @@ controller:
         - ALL
   # -- enable Workflow Archive to store the status of workflows. Postgres and MySQL (>= 5.7.8) are available.
   ## Ref: https://argo-workflows.readthedocs.io/en/stable/workflow-archive/
-  persistence: {}
-  # connectionPool:
-  #   maxIdleConns: 100
-  #   maxOpenConns: 0
-  # # save the entire workflow into etcd and DB
-  # nodeStatusOffLoad: false
-  # # enable archiving of old workflows
-  # archive: false
-  # postgresql:
-  #   host: localhost
-  #   port: 5432
-  #   database: postgres
-  #   tableName: argo_workflows
-  #   # the database secrets must be in the same namespace of the controller
-  #   userNameSecret:
-  #     name: argo-postgres-config
-  #     key: username
-  #   passwordSecret:
-  #     name: argo-postgres-config
-  #     key: password
-  #   ssl: true
-  #   # sslMode must be one of: disable, require, verify-ca, verify-full
-  #   # you can find more information about those ssl options here: https://godoc.org/github.com/lib/pq
-  #   sslMode: require
+  persistence:
+    connectionPool:
+      maxIdleConns: 100
+      maxOpenConns: 20
+    # save the entire workflow into etcd and DB
+    nodeStatusOffLoad: true
+    # enable archiving of old workflows
+    archive: true
+    postgresql:
+      host: postgres.database.svc.cluster.local
+      port: 5432
+      database: argo_workflows
+      tableName: argo_workflows
+      # the database secrets must be in the same namespace of the controller
+      userNameSecret:
+        name: argo-postgres-config
+        key: username
+      passwordSecret:
+        name: argo-postgres-config
+        key: password
+      ssl: true
+      # sslMode must be one of: disable, require, verify-ca, verify-full
+      # you can find more information about those ssl options here: https://godoc.org/github.com/lib/pq
+      sslMode: require
   # mysql:
   #   host: localhost
   #   port: 3306
@@ -258,11 +259,12 @@ controller:
     servicePortName: telemetry
   serviceMonitor:
     # -- Enable a prometheus ServiceMonitor
-    enabled: false
+    enabled: true
     # -- Prometheus ServiceMonitor labels
-    additionalLabels: {}
+    additionalLabels:
+      release: prometheus
     # -- Prometheus ServiceMonitor namespace
-    namespace: "" # "monitoring"
+    namespace: "monitoring"
   serviceAccount:
     # -- Create a service account for the controller
     create: true
@@ -316,7 +318,13 @@ controller:
   loadBalancerSourceRanges: []
 
   # -- Resource limits and requests for the controller
-  resources: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
 
   # -- Configure liveness [probe] for the controller
   # @default -- See [values.yaml]
@@ -341,15 +349,14 @@ controller:
   # -- Additional volumes to the controller pod
   volumes: []
   # -- The number of controller pods to run
-  replicas: 1
+  replicas: 2
   # -- The number of revisions to keep.
-  revisionHistoryLimit: 10
+  revisionHistoryLimit: 5
 
   pdb:
     # -- Configure [Pod Disruption Budget] for the controller pods
-    enabled: false
-    # minAvailable: 1
-    # maxUnavailable: 1
+    enabled: true
+    minAvailable: 1
 
   # -- [Node selector]
   nodeSelector:
@@ -536,42 +543,48 @@ server:
   # -- Source ranges to allow access to service from. Only applies to service type `LoadBalancer`
   loadBalancerSourceRanges: []
   # -- Resource limits and requests for the server
-  resources: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
   # -- The number of server pods to run
-  replicas: 1
+  replicas: 2
   # -- The number of revisions to keep.
-  revisionHistoryLimit: 10
+  revisionHistoryLimit: 5
   ## Argo Server Horizontal Pod Autoscaler
   autoscaling:
     # -- Enable Horizontal Pod Autoscaler ([HPA]) for the Argo Server
-    enabled: false
+    enabled: true
     # -- Minimum number of replicas for the Argo Server [HPA]
-    minReplicas: 1
+    minReplicas: 2
     # -- Maximum number of replicas for the Argo Server [HPA]
     maxReplicas: 5
     # -- Average CPU utilization percentage for the Argo Server [HPA]
-    targetCPUUtilizationPercentage: 50
+    targetCPUUtilizationPercentage: 70
     # -- Average memory utilization percentage for the Argo Server [HPA]
-    targetMemoryUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 70
     # -- Configures the scaling behavior of the target in both Up and Down directions.
     # This is only available on HPA apiVersion `autoscaling/v2beta2` and newer
-    behavior: {}
-      # scaleDown:
-      #  stabilizationWindowSeconds: 300
-      #  policies:
-      #   - type: Pods
-      #     value: 1
-      #     periodSeconds: 180
-      # scaleUp:
-      #   stabilizationWindowSeconds: 300
-      #   policies:
-      #   - type: Pods
-      #     value: 2
+    behavior:
+      scaleDown:
+        stabilizationWindowSeconds: 300
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 180
+      scaleUp:
+        stabilizationWindowSeconds: 60
+        policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
   pdb:
     # -- Configure [Pod Disruption Budget] for the server pods
-    enabled: false
-    # minAvailable: 1
-    # maxUnavailable: 1
+    enabled: true
+    minAvailable: 1
 
   # -- [Node selector]
   nodeSelector:
