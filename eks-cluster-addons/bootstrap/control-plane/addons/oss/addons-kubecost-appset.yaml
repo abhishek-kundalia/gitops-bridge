@@ -26,15 +26,9 @@ spec:
           - clusters:
               selector:
                 matchLabels:
-                  environment: staging
-              values:
-                addonChartVersion: 1.106.3
-          - clusters:
-              selector:
-                matchLabels:
                   environment: prod
               values:
-                addonChartVersion: 1.106.3
+                addonChartVersion: v2.7.2
   template:
     metadata:
       name: addon-{{name}}-{{values.addonChart}}
