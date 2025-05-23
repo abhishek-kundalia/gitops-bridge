@@ -1,0 +1,43 @@
+# Kubecost Helm chart values
+
+# Global settings
+global:
+  prometheus:
+    enabled: false  # Set to false if you already have Prometheus installed
+    fqdn: http://prometheus-server.kube-prometheus-stack.svc.cluster.local:9090  # Point to existing Prometheus if available
+
+# Service configuration
+service:
+  type: ClusterIP
+
+# Ingress configuration (if needed)
+ingress:
+  enabled: false
+
+# Persistence settings
+persistentVolume:
+  enabled: true
+  size: 32Gi
+
+# Cost analyzer settings
+kubecostProductConfigs:
+  clusterName: ${cluster_name}
+
+# Grafana integration
+grafana:
+  enabled: false  # Set to false if you already have Grafana installed
+  proxy: false
+
+# Network costs
+networkCosts:
+  enabled: true
+
+# Prometheus configuration
+prometheus:
+  nodeExporter:
+    enabled: false  # Set to false if already deployed with kube-prometheus-stack
+  serviceAccounts:
+    nodeExporter:
+      create: false  # Set to false if already deployed with kube-prometheus-stack
+  kubeStateMetrics:
+    enabled: false  # Set to false if already deployed with kube-prometheus-stack

@@ -183,6 +183,7 @@ variable "addons" {
     # enable_metrics_server             = true
     # enable_prometheus_adapter         = true
     # enable_secrets_store_csi_driver   = true
+    enable_kubecost                   = true
     # enable_vpa                        = true
   }
 }
