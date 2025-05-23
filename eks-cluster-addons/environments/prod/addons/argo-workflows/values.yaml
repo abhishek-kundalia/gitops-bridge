@@ -174,30 +174,30 @@ controller:
         - ALL
   # -- enable Workflow Archive to store the status of workflows. Postgres and MySQL (>= 5.7.8) are available.
   ## Ref: https://argo-workflows.readthedocs.io/en/stable/workflow-archive/
-  persistence:
-    connectionPool:
-      maxIdleConns: 100
-      maxOpenConns: 20
-    # save the entire workflow into etcd and DB
-    nodeStatusOffLoad: true
-    # enable archiving of old workflows
-    archive: false
-    postgresql:
-      host: postgres.database.svc.cluster.local
-      port: 5432
-      database: argo_workflows
-      tableName: argo_workflows
-      # the database secrets must be in the same namespace of the controller
-      userNameSecret:
-        name: argo-postgres-config
-        key: username
-      passwordSecret:
-        name: argo-postgres-config
-        key: password
-      ssl: true
-      # sslMode must be one of: disable, require, verify-ca, verify-full
-      # you can find more information about those ssl options here: https://godoc.org/github.com/lib/pq
-      sslMode: require
+  persistence: {}
+  # connectionPool:
+  #   maxIdleConns: 100
+  #   maxOpenConns: 20
+  # # save the entire workflow into etcd and DB
+  # nodeStatusOffLoad: false
+  # # enable archiving of old workflows
+  # archive: false
+  # postgresql:
+  #   host: postgres.database.svc.cluster.local
+  #   port: 5432
+  #   database: argo_workflows
+  #   tableName: argo_workflows
+  #   # the database secrets must be in the same namespace of the controller
+  #   userNameSecret:
+  #     name: argo-postgres-config
+  #     key: username
+  #   passwordSecret:
+  #     name: argo-postgres-config
+  #     key: password
+  #   ssl: true
+  #   # sslMode must be one of: disable, require, verify-ca, verify-full
+  #   # you can find more information about those ssl options here: https://godoc.org/github.com/lib/pq
+  #   sslMode: require
   # mysql:
   #   host: localhost
   #   port: 3306
