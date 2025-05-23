@@ -13,7 +13,7 @@ spec:
               values:
                 addonChart: kubecost
                 # anything not staging or prod use this version
-                addonChartVersion: 2.6
+                addonChartVersion: v2.7.2
                 addonChartRepository: https://kubecost.github.io/cost-analyzer/
               selector:
                 matchExpressions:
