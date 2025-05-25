@@ -13,7 +13,7 @@ spec:
               values:
                 addonChart: kubecost
                 # anything not staging or prod use this version
-                addonChartVersion: v2.7.2
+                # addonChartVersion: v2.7.2
                 addonChartRepository: https://kubecost.github.io/cost-analyzer/
               selector:
                 matchExpressions:
@@ -27,8 +27,8 @@ spec:
               selector:
                 matchLabels:
                   environment: prod
-              values:
-                addonChartVersion: v2.7.2
+              # values:
+              #   addonChartVersion: v2.7.2
   template:
     metadata:
       name: addon-{{name}}-{{values.addonChart}}
@@ -40,7 +40,7 @@ spec:
           ref: values
         - chart: '{{values.addonChart}}'
           repoURL: '{{values.addonChartRepository}}'
-          targetRevision: '{{values.addonChartVersion}}'
+          # targetRevision: '{{values.addonChartVersion}}'
           helm:
             releaseName: '{{values.addonChart}}'
             ignoreMissingValueFiles: true
