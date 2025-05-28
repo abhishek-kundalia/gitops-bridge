@@ -43,10 +43,10 @@ ingress:
     alb.ingress.kubernetes.io/tags: Environment=prod,GitOps=true
     kubernetes.io/ingress.class: alb
   hosts:
-    - host: '${kubecost_host}'
+    - host: ${kubecost_host}
       paths:
         - path: /
           pathType: Prefix
   tls:
     - hosts:
-        - '${kubecost_host}'
+        - ${kubecost_host}
