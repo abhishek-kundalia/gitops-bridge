@@ -11,9 +11,9 @@ spec:
         generators:
           - clusters:
               values:
-                addonChart: kubecost
+                addonChart: cost-analyzer
                 # anything not staging or prod use this version
-                # addonChartVersion: v2.7.2
+                addonChartVersion: 2.7.2
                 addonChartRepository: https://kubecost.github.io/cost-analyzer/
               selector:
                 matchExpressions:
@@ -27,8 +27,8 @@ spec:
               selector:
                 matchLabels:
                   environment: prod
-              # values:
-              #   addonChartVersion: v2.7.2
+              values:
+                addonChartVersion: 2.7.2
   template:
     metadata:
       name: addon-{{name}}-{{values.addonChart}}
@@ -38,9 +38,9 @@ spec:
         - repoURL: '{{metadata.annotations.addons_repo_url}}'
           targetRevision: '{{metadata.annotations.addons_repo_revision}}'
           ref: values
-        - chart: '{{values.addonChart}}'
+        - chart: 'kubecost/{{values.addonChart}}'
           repoURL: '{{values.addonChartRepository}}'
-          # targetRevision: '{{values.addonChartVersion}}'
+          targetRevision: '{{values.addonChartVersion}}'
           helm:
             releaseName: '{{values.addonChart}}'
             ignoreMissingValueFiles: true
