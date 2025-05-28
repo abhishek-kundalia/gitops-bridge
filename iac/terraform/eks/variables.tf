@@ -116,6 +116,12 @@ variable "argo_workflows_subdomain" {
   default     = "argoworkflows"
 }
 
+variable "kubecost_subdomain" {
+  description = "Subdomain for Kubecost"
+  type        = string
+  default     = "kubecost"
+}
+
 variable "argocd_chart_version" {
   description = "Version of the ArgoCD Helm chart"
   type        = string

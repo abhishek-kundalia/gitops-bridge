@@ -41,11 +41,12 @@ ingress:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/tags: Environment=prod,GitOps=true
+    kubernetes.io/ingress.class: alb
   hosts:
-    - host: kubecost.pocketfm.org
+    - host: '${kubecost_host}'
       paths:
         - path: /
           pathType: Prefix
   tls:
     - hosts:
-        - kubecost.pocketfm.org
+        - '${kubecost_host}'

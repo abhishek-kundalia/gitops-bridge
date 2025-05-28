@@ -48,6 +48,9 @@ spec:
               - $values/{{metadata.annotations.addons_repo_basepath}}environments/default/addons/{{values.addonChart}}/values.yaml
               - $values/{{metadata.annotations.addons_repo_basepath}}environments/{{metadata.labels.environment}}/addons/{{values.addonChart}}/values.yaml
               - $values/{{metadata.annotations.addons_repo_basepath}}clusters/{{name}}/addons/{{values.addonChart}}/values.yaml
+            values: |
+              kubecost_host: "{{metadata.annotations.kubecost_host}}"
+              cluster_name: "{{metadata.annotations.aws_cluster_name}}"
       destination:
         namespace: '{{values.addonChart}}'
         name: '{{name}}'

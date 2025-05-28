@@ -50,6 +50,8 @@ locals {
   route53_zone_arn         = try(var.aws_route53_zone_arn, "")
   argo_workflows_subdomain = var.argo_workflows_subdomain
   argo_workflows_host      = "${local.argo_workflows_subdomain}.${local.domain_name}"
+  kubecost_subdomain       = var.kubecost_subdomain
+  kubecost_host            = "${local.kubecost_subdomain}.${local.domain_name}"
 
   git_private_ssh_key = var.ssh_key_path
 
@@ -133,12 +135,13 @@ locals {
       addons_repo_path     = local.gitops_addons_path
       addons_repo_revision = local.gitops_addons_revision
     },
-    {
-      argocd_hosts                = "${local.argocd_host}"
-      argo_workflows_hosts        = "[${local.argo_workflows_host}]"
-      external_dns_domain_filters = "[${local.domain_name}]"
-      external_dns_policy         = "sync"
-    },
+  {
+    argocd_hosts                = "${local.argocd_host}"
+    argo_workflows_hosts        = "[${local.argo_workflows_host}]"
+    kubecost_host               = "${local.kubecost_host}"
+    external_dns_domain_filters = "[${local.domain_name}]"
+    external_dns_policy         = "sync"
+  },
     {
       workload_repo_url      = local.gitops_workload_url
       workload_repo_basepath = local.gitops_workload_basepath
