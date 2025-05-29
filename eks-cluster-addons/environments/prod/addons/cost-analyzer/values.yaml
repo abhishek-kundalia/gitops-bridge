@@ -21,3 +21,23 @@ persistentVolume:
 # Enable alerting in production
 alertConfigs:
   enabled: true
+
+# Enable ingress for production with ALB
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: true
+  annotations:
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/target-type: "ip"
+    alb.ingress.kubernetes.io/backend-protocol: "HTTP"
+    alb.ingress.kubernetes.io/listen-ports: "[{\"HTTPS\":443}]"
+    alb.ingress.kubernetes.io/tags: "Environment=hub,GitOps=true"
+  ingressClassName: "alb"
+  hosts: '{{.metadata.annotations.kubecost_host}}'
+  paths:
+    - /
+  pathType: Prefix
+  tls:
+  - hosts: '{{.metadata.annotations.kubecost_host}}'
