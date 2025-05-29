@@ -63,13 +63,13 @@ spec:
                   alb.ingress.kubernetes.io/tags: "Environment=hub,GitOps=true"
                 ingressClassName: "alb"
                 hosts: 
-                  - {{metadata.annotations.aws_cluster_name}}
+                  - {{metadata.annotations.kubecost_host}}
                 paths:
                   - /
                 pathType: Prefix
                 tls:
                 - hosts:
-                  - {{metadata.annotations.aws_cluster_name}}
+                  - {{metadata.annotations.kubecost_host}}
       destination:
         namespace: '{{values.addonChart}}'
         name: '{{name}}'
