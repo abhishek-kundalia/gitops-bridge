@@ -49,7 +49,6 @@ spec:
               - $values/{{metadata.annotations.addons_repo_basepath}}environments/{{metadata.labels.environment}}/addons/{{values.addonChart}}/values.yaml
               - $values/{{metadata.annotations.addons_repo_basepath}}clusters/{{name}}/addons/{{values.addonChart}}/values.yaml
             values: |
-              clusterName: {{metadata.annotations.aws_cluster_name}}
               kubecostProductConfigs:
                 clusterName: {{metadata.annotations.aws_cluster_name}}
               service:
