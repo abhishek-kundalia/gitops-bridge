@@ -49,8 +49,24 @@ spec:
               - $values/{{metadata.annotations.addons_repo_basepath}}environments/{{metadata.labels.environment}}/addons/{{values.addonChart}}/values.yaml
               - $values/{{metadata.annotations.addons_repo_basepath}}clusters/{{name}}/addons/{{values.addonChart}}/values.yaml
             values: |
-              kubecost_host: "{{metadata.annotations.kubecost_host}}"
-              cluster_name: "{{metadata.annotations.aws_cluster_name}}"
+              clusterName: {{metadata.annotations.aws_cluster_name}}
+              server:
+                serviceType: ClusterIP
+                ingress:
+                  enabled: true
+                  annotations:
+                    alb.ingress.kubernetes.io/scheme: "internet-facing"
+                    alb.ingress.kubernetes.io/target-type: "ip"
+                    alb.ingress.kubernetes.io/backend-protocol: "HTTP"
+                    alb.ingress.kubernetes.io/listen-ports: "[{\"HTTPS\":443}]"
+                    alb.ingress.kubernetes.io/tags: "Environment=hub,GitOps=true"
+                  ingressClassName: "alb"
+                  hosts: {{.metadata.annotations.kubecost_host}}
+                  paths:
+                    - /
+                  pathType: Prefix
+                  tls:
+                  - hosts: {{.metadata.annotations.kubecost_host}}
       destination:
         namespace: '{{values.addonChart}}'
         name: '{{name}}'

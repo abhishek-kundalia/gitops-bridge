@@ -1,9 +1,5 @@
 # Kubecost Helm chart values for production environment
 
-# Environment-specific settings
-kubecostProductConfigs:
-  clusterName: ${cluster_name}-prod
-
 # Adjust resource requests/limits for production
 resources:
   requests:
@@ -25,28 +21,3 @@ persistentVolume:
 # Enable alerting in production
 alertConfigs:
   enabled: true
-
-# Enable ingress for production with ALB
-service:
-  type: ClusterIP
-
-ingress:
-  enabled: true
-  controller: aws
-  ingressClassName: alb
-  annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/backend-protocol: HTTP
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
-    alb.ingress.kubernetes.io/tags: Environment=prod,GitOps=true
-    kubernetes.io/ingress.class: alb
-  hosts:
-    - host: ${kubecost_host}
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - hosts:
-        - ${kubecost_host}
