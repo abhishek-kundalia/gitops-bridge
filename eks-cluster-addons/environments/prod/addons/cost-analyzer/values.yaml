@@ -26,6 +26,7 @@ alertConfigs:
 service:
   type: ClusterIP
 
+# Note: Ingress host configuration is handled by the ApplicationSet
 ingress:
   enabled: true
   annotations:
@@ -35,9 +36,6 @@ ingress:
     alb.ingress.kubernetes.io/listen-ports: "[{\"HTTPS\":443}]"
     alb.ingress.kubernetes.io/tags: "Environment=hub,GitOps=true"
   ingressClassName: "alb"
-  hosts: {{.metadata.annotations.kubecost_host}}
   paths:
     - /
   pathType: Prefix
-  tls:
-  - hosts: {{.metadata.annotations.kubecost_host}}
