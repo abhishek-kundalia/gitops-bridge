@@ -287,6 +287,24 @@ module "eks" {
   create_cluster_security_group = false
   create_node_security_group    = false
 
+# EKS Access Entries
+  access_entries = {
+    # Admin access for Eng-Admin SSO role
+    eng_admin = {
+      principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-reserved/sso.amazonaws.com/ap-southeast-1/AWSReservedSSO_Eng-Admin-prod_5becdbb936624df5"
+      
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+    
+  }
+
   # eks_managed_node_groups = {
   #   initial = {
   #     ami_type       = "BOTTLEROCKET_ARM_64"
