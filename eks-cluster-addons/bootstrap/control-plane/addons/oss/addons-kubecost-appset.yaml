@@ -61,6 +61,7 @@ spec:
                   alb.ingress.kubernetes.io/backend-protocol: "HTTP"
                   alb.ingress.kubernetes.io/listen-ports: "[{\"HTTPS\":443}]"
                   alb.ingress.kubernetes.io/tags: "Environment=hub,GitOps=true"
+                  kubernetes.io/ingress.class: alb
                 ingressClassName: "alb"
                 hosts: 
                   - {{metadata.annotations.kubecost_host}}
