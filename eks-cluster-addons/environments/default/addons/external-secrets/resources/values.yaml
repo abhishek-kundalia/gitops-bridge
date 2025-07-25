@@ -1,0 +1,33 @@
+# Values file for external-secrets-resources chart
+# This file is used by the ApplicationSet to deploy the resources
+
+# AWS configuration
+aws:
+  region: "us-east-1"
+  roleArn: "arn:aws:iam::856517911253:role/eso-demo-iam-role"
+
+# Service Account configuration
+serviceAccount:
+  create: true
+  name: "eso-demo-sa"
+  namespace: "external-secrets"
+
+# SecretStore configuration
+secretStore:
+  create: true
+  name: "aws-secrets-manager"
+  namespace: "external-secrets"
+
+# ExternalSecret configuration
+externalSecret:
+  create: true
+  name: "eso-demo-secret"
+  sourceNamespace: "external-secrets"
+  targetNamespace: "eso-test-app"
+  secret:
+    awsSecretName: "qa/demo/eso"
+    k8sSecretName: "eso-demo-secret"
+    secretType: "Opaque"
+    refreshInterval: "15s"
+    # Leave dataMapping empty to sync all keys from AWS secret
+    dataMapping: {}

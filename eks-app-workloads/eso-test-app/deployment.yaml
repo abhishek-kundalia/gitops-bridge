@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eso-test-app
+  namespace: eso-test-app
+  labels:
+    app: eso-test-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eso-test-app
+  template:
+    metadata:
+      labels:
+        app: eso-test-app
+    spec:
+      containers:
+      - name: test-container
+        image: busybox:1.35
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "ESO Test App Started"
+          echo "Checking for secret availability..."
+          
+          # Wait for secret directory to be available and populated
+          while [ ! -d /etc/secrets ] || [ -z "$(ls -A /etc/secrets 2>/dev/null)" ]; do
+            echo "Waiting for secret to be synced..."
+            sleep 5
+          done
+          
+          echo "Secret found! Validating secret data..."
+          
+          # Check if secret files exist and are readable
+          if [ -d "/etc/secrets" ]; then
+            echo "Secret directory exists"
+            echo "Secret files:"
+            ls -la /etc/secrets/
+            
+            # Count number of keys in secret
+            SECRET_COUNT=$(ls /etc/secrets/ | wc -l)
+            echo "Number of secret keys: $SECRET_COUNT"
+            
+            # Validate each secret file (without exposing content)
+            for file in /etc/secrets/*; do
+              if [ -f "$file" ]; then
+                filename=$(basename "$file")
+                filesize=$(wc -c < "$file")
+                echo "Secret key '$filename' exists with $filesize bytes"
+              fi
+            done
+            
+            echo "✅ External Secrets integration working successfully!"
+          else
+            echo "❌ Secret directory not found"
+            exit 1
+          fi
+          
+          # Keep container running for inspection
+          echo "Test completed. Container will sleep for monitoring..."
+          while true; do
+            echo "ESO Test App is running - $(date)"
+            sleep 300  # Log every 5 minutes
+          done
+        env:
+        - name: AWS_SECRET_NAME
+          value: "qa/demo/eso"
+        - name: K8S_SECRET_NAME
+          value: "eso-demo-secret"
+        - name: TEST_TIMESTAMP
+          value: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        volumeMounts:
+        - name: secret-volume
+          mountPath: /etc/secrets
+          readOnly: true
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: eso-demo-secret
+          optional: false
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eso-test-app-service
+  namespace: eso-test-app
+  labels:
+    app: eso-test-app
+spec:
+  selector:
+    app: eso-test-app
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP

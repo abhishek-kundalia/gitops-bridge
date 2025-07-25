@@ -1,0 +1,75 @@
+# Values for external-secrets-resources Helm chart
+
+# Global settings
+global:
+  # Labels to apply to all resources
+  labels: {}
+  # Annotations to apply to all resources
+  annotations: {}
+
+# AWS configuration
+aws:
+  # AWS region where secrets are stored
+  region: "us-east-1"
+  # IAM role ARN for IRSA authentication
+  roleArn: "arn:aws:iam::856517911253:role/eso-demo-iam-role"
+
+# Service Account configuration
+serviceAccount:
+  # Whether to create the service account
+  create: true
+  # Name of the service account
+  name: "eso-demo-sa"
+  # Namespace for the service account
+  namespace: "external-secrets"
+  # Labels to apply to the service account
+  labels: {}
+  # Annotations to apply to the service account
+  annotations: {}
+
+# SecretStore configuration
+secretStore:
+  # Whether to create the SecretStore resource
+  create: true
+  # Name of the SecretStore
+  name: "aws-secrets-manager"
+  # Namespace for the SecretStore
+  namespace: "external-secrets"
+  # Labels to apply to the SecretStore
+  labels: {}
+  # Annotations to apply to the SecretStore
+  annotations: {}
+
+# ExternalSecret configuration
+externalSecret:
+  # Whether to create the ExternalSecret resource
+  create: true
+  # Name of the ExternalSecret
+  name: "eso-demo-secret"
+  # Source namespace (where SecretStore is located)
+  sourceNamespace: "external-secrets"
+  # Target namespace (where Kubernetes secret will be created)
+  targetNamespace: "eso-test-app"
+  # Labels to apply to the ExternalSecret
+  labels: {}
+  # Annotations to apply to the ExternalSecret
+  annotations: {}
+  
+  # Secret configuration
+  secret:
+    # Name of the secret in AWS Secrets Manager
+    awsSecretName: "qa/demo/eso"
+    # Name of the target Kubernetes secret
+    k8sSecretName: "eso-demo-secret"
+    # Type of the target Kubernetes secret
+    secretType: "Opaque"
+    # Refresh interval for the secret
+    refreshInterval: "15s"
+    
+    # Data mapping - maps AWS secret keys to Kubernetes secret keys
+    # If empty, all keys from AWS secret will be synced as-is
+    dataMapping: {}
+    # Example:
+    # dataMapping:
+    #   username: username
+    #   password: password
