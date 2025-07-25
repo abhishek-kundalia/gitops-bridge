@@ -1,1 +1,44 @@
-# Helm chart values
+# Helm chart values for External Secrets Operator
+
+# Additional resources to deploy alongside External Secrets
+resources:
+  # Deploy external secrets resources (SecretStore, ExternalSecret, etc.)
+  enabled: true
+  
+  # Helm chart configuration for resources
+  chart:
+    name: external-secrets-resources
+    path: resources/charts/external-secrets-resources
+    
+  # Values for the resources chart
+  values:
+    # AWS configuration
+    aws:
+      region: "us-east-1"
+      roleArn: "arn:aws:iam::856517911253:role/eso-demo-iam-role"
+    
+    # Service Account configuration
+    serviceAccount:
+      create: true
+      name: "eso-demo-sa"
+      namespace: "external-secrets"
+    
+    # SecretStore configuration
+    secretStore:
+      create: true
+      name: "aws-secrets-manager"
+      namespace: "external-secrets"
+    
+    # ExternalSecret configuration
+    externalSecret:
+      create: true
+      name: "eso-demo-secret"
+      sourceNamespace: "external-secrets"
+      targetNamespace: "eso-test-app"
+      secret:
+        awsSecretName: "qa/demo/eso"
+        k8sSecretName: "eso-demo-secret"
+        secretType: "Opaque"
+        refreshInterval: "15s"
+        # Leave dataMapping empty to sync all keys from AWS secret
+        dataMapping: {}
